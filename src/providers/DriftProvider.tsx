@@ -23,7 +23,7 @@ const DriftProvider = (props: PropsWithChildren) => {
     <>
       {props.children}
     </>
-  )
+  );
 };
 
 export default DriftProvider;
