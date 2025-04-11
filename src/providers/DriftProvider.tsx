@@ -17,7 +17,7 @@ const DriftProvider = (props: PropsWithChildren) => {
     return () => {
       resetDriftClient();
     };
-  }, [wallet, initDriftClient, resetDriftClient]);
+  }, [wallet]);
 
   return (
     <>

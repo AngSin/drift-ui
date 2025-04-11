@@ -1,6 +1,7 @@
 import {Button, CloseButton, Drawer, Portal, Card, Stack} from "@chakra-ui/react";
 import useDriftStore from "@/store/driftStore";
 import {shortenAddress} from "@/utils/strings";
+import {convertToNumber} from "@drift-labs/sdk-browser";
 
 const AccountsDrawer = () => {
   const { selectedUser, users, selectUser } = useDriftStore();
@@ -34,7 +35,8 @@ const AccountsDrawer = () => {
                     <Card.Body>
                       <Card.Title>{Buffer.from(user.account.name).toString()}</Card.Title>
                       <Card.Description>Sub Account ID: {user.account.subAccountId}</Card.Description>
-                      <Card.Description>Sub Account Address: {shortenAddress(user.publicKey.toString())}</Card.Description>
+                      <Card.Description>Sub Account Address: {shortenAddress(user.driftUser.getUserAccountPublicKey().toString())}</Card.Description>
+                      <Card.Description>${(convertToNumber(user.driftUser.getTotalAssetValue()) as unknown as number).toFixed(2)}</Card.Description>
                     </Card.Body>
                   </Card.Root>
                 ))}
