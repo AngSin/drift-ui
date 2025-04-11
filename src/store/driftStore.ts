@@ -8,13 +8,14 @@ import {
   BulkAccountLoader,
   DriftClient,
   fetchUserAccounts,
-  initialize, PerpMarkets,
+  initialize,
+  PerpMarkets,
   User as DriftUser,
   UserAccount,
 } from "@drift-labs/sdk-browser";
-import driftIDL from '@drift-labs/sdk/src/idl/drift.json';
+import driftIDL from '@drift-labs/sdk-browser/src/idl/drift.json';
 import {AnchorProvider, Idl, Program} from "@coral-xyz/anchor";
-import {connection} from "@/utils/constants";
+import {connection, ONE_SECOND_INTERVAL} from "@/utils/constants";
 
 type User = {
   driftUser: DriftUser;
@@ -34,8 +35,6 @@ interface DriftState {
   getMarketSymbol: (marketIndex: number) => string | undefined;
   positionsUpdatedAt: number;
 }
-
-export const ONE_SECOND_INTERVAL = 1_000;
 
 const useDriftStore = create<DriftState>((set, get) => ({
   bulkAccountLoader: undefined,

@@ -4,3 +4,4 @@ export const connection = new Connection(
   process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
   'confirmed',
 );
+export const ONE_SECOND_INTERVAL = 1_000;

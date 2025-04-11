@@ -11,7 +11,6 @@
   "dependencies": {
     "@chakra-ui/react": "^3.15.1",
     "@coral-xyz/anchor": "^0.28.0",
-    "@drift-labs/sdk": "^2.118.0-beta.5",
     "@drift-labs/sdk-browser": "^2.118.0-beta.5",
     "@emotion/react": "^11.14.0",
     "@solana/spl-token": "^0.4.13",
