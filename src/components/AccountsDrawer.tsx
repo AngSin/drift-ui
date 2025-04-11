@@ -6,6 +6,7 @@ import {convertToNumber, QUOTE_PRECISION} from "@drift-labs/sdk-browser";
 import {useEffect, useState} from "react";
 import {connection} from "@/utils/constants";
 import {LAMPORTS_PER_SOL} from "@solana/web3.js";
+import DepositDialog from "@/components/DepositDialog";
 
 const AccountsDrawer = () => {
   const [walletBalance, setWalletBalance] = useState<string>('0.0');
@@ -59,7 +60,7 @@ const AccountsDrawer = () => {
                   <div>Wallet Balance</div>
                 </div>
               </div>
-              <Button className="w-full">Deposit/Withdraw</Button>
+              <DepositDialog />
               <Stack gap="4" direction="column" wrap="wrap" marginTop={2}>
                 {users.map((user) => (
                   <Card.Root

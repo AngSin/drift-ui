@@ -28,7 +28,7 @@ const WalletAdapterProvider = ({
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
     ],
-    [network],
+    [],
   );
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 import useDriftStore from "@/store/driftStore";
 import {Table, Tabs} from "@chakra-ui/react";
-import {BN, convertToNumber, QUOTE_PRECISION, BASE_PRECISION} from "@drift-labs/sdk-browser";
+import {BASE_PRECISION, convertToNumber, QUOTE_PRECISION} from "@drift-labs/sdk-browser";
 import {useEffect, useState} from "react";
 import {ONE_SECOND_INTERVAL} from "@/utils/constants";
 
