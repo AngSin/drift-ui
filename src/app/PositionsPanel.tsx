@@ -3,6 +3,7 @@ import {User} from "@/store/driftStore";
 import {Table, Tabs} from "@chakra-ui/react";
 import {formatBalance, getMarketSymbol} from "@/utils/strings";
 import {DriftClient} from "@drift-labs/sdk-browser";
+import OrdersTable from "@/OrdersTable";
 
 type PositionsPanelProps = {
   selectedUser: User,
@@ -10,7 +11,8 @@ type PositionsPanelProps = {
 };
 
 const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
-  const positions = selectedUser?.driftUser.getActivePerpPositions();
+  const positions = selectedUser.driftUser.getActivePerpPositions();
+  const orders = selectedUser.driftUser.getOpenOrders();
 
   return (
     <div>
@@ -34,9 +36,9 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {driftClient && positions?.map((position) => {
+              {driftClient && positions?.map((position, index) => {
                 return (
-                  <Table.Row key={position.marketIndex}>
+                  <Table.Row key={index}>
                     <Table.Cell>
                       {getMarketSymbol(position.marketIndex)}
                     </Table.Cell>
@@ -49,7 +51,9 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
             </Table.Body>
           </Table.Root>
         </Tabs.Content>
-        <Tabs.Content value="orders">Manage your projects</Tabs.Content>
+        <Tabs.Content value="orders">
+          <OrdersTable orders={orders} />
+        </Tabs.Content>
       </Tabs.Root>
     </div>
   )
