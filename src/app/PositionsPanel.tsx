@@ -1,7 +1,7 @@
 "use client";
 import useDriftStore from "@/store/driftStore";
 import {Table, Tabs} from "@chakra-ui/react";
-import {BASE_PRECISION, convertToNumber, QUOTE_PRECISION} from "@drift-labs/sdk-browser";
+import {formatBalance} from "@/utils/strings";
 
 const PositionsPanel = () => {
   const { selectedUser, driftClient, getMarketSymbol } = useDriftStore();
@@ -35,9 +35,9 @@ const PositionsPanel = () => {
                     <Table.Cell>
                       {getMarketSymbol(position.marketIndex)}
                     </Table.Cell>
-                    <Table.Cell>{convertToNumber(position.baseAssetAmount, BASE_PRECISION)}</Table.Cell>
-                    <Table.Cell>${convertToNumber(driftClient.getUser().getUnrealizedPNL(true, position.marketIndex),  QUOTE_PRECISION).toFixed(2)}</Table.Cell>
-                    <Table.Cell>${convertToNumber(driftClient.getOracleDataForPerpMarket(position.marketIndex).price, QUOTE_PRECISION).toFixed(2)}</Table.Cell>
+                    <Table.Cell>{formatBalance(position.baseAssetAmount, 9)}</Table.Cell>
+                    <Table.Cell>${formatBalance(driftClient.getUser().getUnrealizedPNL(true, position.marketIndex),  6)}</Table.Cell>
+                    <Table.Cell>${formatBalance(driftClient.getOracleDataForPerpMarket(position.marketIndex).price, 6)}</Table.Cell>
                   </Table.Row>
                 )
               })}

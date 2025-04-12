@@ -1,42 +1,21 @@
 'use client';
 
-import { Button, Dialog, Input, Link, Box } from "@chakra-ui/react";
-import { toaster } from "@/components/ui/toaster";
+import {Box, Button, Dialog, Input, Link, Text} from "@chakra-ui/react";
+import {toaster} from "@/components/ui/toaster";
 import UserAccountSelect from "@/app/UserAccountSelect";
 import AssetSelect from "@/app/AssetSelect";
-import { BN, SpotMarketAccount, WRAPPED_SOL_MINT, ZERO } from "@drift-labs/sdk-browser";
-import { useState } from "react";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {SpotMarketAccount, WRAPPED_SOL_MINT, ZERO} from "@drift-labs/sdk-browser";
+import {useMemo, useState} from "react";
+import {getAssociatedTokenAddressSync} from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
-
-function decimalStrToBN(decimalStr: string, decimals: number): BN {
-  if (!decimalStr || isNaN(parseFloat(decimalStr))) {
-    return ZERO;
-  }
-  const safeStr = String(Number(decimalStr));
-  const parts = safeStr.split('.');
-  const integerPart = parts[0];
-  const fractionalPart = parts[1] || '';
-  const integerBN = new BN(integerPart).mul(new BN(10).pow(new BN(decimals)));
-  let fractionalBN = ZERO;
-  if (fractionalPart.length > 0) {
-    const trimmedFractional = fractionalPart.substring(0, decimals);
-    const paddedFractional = trimmedFractional.padEnd(decimals, '0');
-    fractionalBN = new BN(paddedFractional);
-  }
-  if (safeStr.startsWith('-')) {
-    return integerBN.add(fractionalBN).neg();
-  } else {
-    return integerBN.add(fractionalBN);
-  }
-}
+import {decimalStrToBN, formatBalance} from "@/utils/strings";
 
 const solscanBaseUrl = `https://solscan.io/tx`;
 
 const WithdrawForm = () => {
   const [amountStr, setAmountStr] = useState<string>("0");
   const [spotMarketAccount, setSpotMarketAccount] = useState<SpotMarketAccount>();
-  const { driftClient, selectedUser } = useDriftStore();
+  const { driftClient, selectedUser, lastUpdatedAt } = useDriftStore();
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.currentTarget.value;
@@ -52,8 +31,24 @@ const WithdrawForm = () => {
     setAmountStr(value);
   };
 
+  const availableBalanceBn = useMemo(() => {
+    if (!selectedUser?.driftUser || spotMarketAccount === undefined) {
+      return undefined;
+    }
+    const spotPosition = selectedUser.driftUser.getSpotPosition(spotMarketAccount.marketIndex);
+    return spotPosition ? spotPosition.scaledBalance : ZERO;
+  }, [selectedUser, spotMarketAccount, lastUpdatedAt]);
+
+  const formattedBalance = useMemo(() => {
+    if (spotMarketAccount === undefined || availableBalanceBn === undefined) {
+      return '0.00';
+    }
+    return formatBalance(availableBalanceBn, spotMarketAccount.decimals);
+  }, [availableBalanceBn, spotMarketAccount]);
+
+
   const withdraw = async () => {
-    if (!driftClient || !selectedUser || !spotMarketAccount) {
+    if (!driftClient || !selectedUser || !spotMarketAccount || availableBalanceBn === undefined) {
       toaster.create({
         title: "Missing Information",
         description: "Please wait or reload the page",
@@ -90,6 +85,18 @@ const WithdrawForm = () => {
         });
         return;
       }
+
+      if (transferAmount.gt(availableBalanceBn)) {
+        toaster.create({
+          title: "Insufficient Balance",
+          description: `Cannot withdraw more than available ${formattedBalance} ${Buffer.from(spotMarketAccount.name).toString()}`,
+          type: "error",
+          duration: 5000,
+          closable: true,
+        });
+        return;
+      }
+
 
       const destinationAccount = isSol
         ? selectedUser.account.authority
@@ -155,6 +162,13 @@ const WithdrawForm = () => {
             min={0}
           />
         </div>
+        <Box textAlign="right" mt={1} mr={1} height="20px">
+          {spotMarketAccount && selectedUser && (
+            <Text fontSize="xs" color="gray.500">
+              Balance: {formattedBalance} {Buffer.from(spotMarketAccount.name).toString()}
+            </Text>
+          )}
+        </Box>
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.ActionTrigger asChild>

@@ -16,6 +16,7 @@ const UserAccountSelect = ({ label }: UserAccountSelectProps) => {
       collection={userCollection}
       size="sm"
       width="320px"
+      value={selectedUser ? [selectedUser.account.subAccountId.toString()] : []}
     >
       <Select.Label>{label}</Select.Label>
       <Select.Control>

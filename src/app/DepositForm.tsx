@@ -1,35 +1,15 @@
 'use client';
 
-import { Button, Dialog, Input, Link, Box } from "@chakra-ui/react";
-import { toaster } from "@/components/ui/toaster"
+import { Box, Button, Dialog, Input, Link, Text } from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
 import UserAccountSelect from "@/app/UserAccountSelect";
 import AssetSelect from "@/app/AssetSelect";
-import {BN, SpotMarketAccount, WRAPPED_SOL_MINT, ZERO} from "@drift-labs/sdk-browser";
-import { useState } from "react";
+import { SpotMarketAccount, WRAPPED_SOL_MINT, ZERO, BN } from "@drift-labs/sdk-browser";
+import { useState, useEffect, useMemo } from "react";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
+import { decimalStrToBN, formatBalance } from "@/utils/strings";
 
-function decimalStrToBN(decimalStr: string, decimals: number): BN {
-  if (!decimalStr || isNaN(parseFloat(decimalStr))) {
-    return ZERO;
-  }
-  const safeStr = String(Number(decimalStr));
-  const parts = safeStr.split('.');
-  const integerPart = parts[0];
-  const fractionalPart = parts[1] || '';
-  const integerBN = new BN(integerPart).mul(new BN(10).pow(new BN(decimals)));
-  let fractionalBN = ZERO;
-  if (fractionalPart.length > 0) {
-    const trimmedFractional = fractionalPart.substring(0, decimals);
-    const paddedFractional = trimmedFractional.padEnd(decimals, '0');
-    fractionalBN = new BN(paddedFractional);
-  }
-  if (safeStr.startsWith('-')) {
-    return integerBN.add(fractionalBN).neg();
-  } else {
-    return integerBN.add(fractionalBN);
-  }
-}
 
 const solscanBaseUrl = `https://solscan.io/tx`;
 
@@ -37,6 +17,7 @@ const DepositForm = () => {
   const [amountStr, setAmountStr] = useState<string>("0");
   const [spotMarketAccount, setSpotMarketAccount] = useState<SpotMarketAccount>();
   const { driftClient, selectedUser } = useDriftStore();
+  const [walletBalanceBn, setWalletBalanceBn] = useState<BN | undefined>(undefined);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.currentTarget.value;
@@ -51,6 +32,65 @@ const DepositForm = () => {
     }
     setAmountStr(value);
   };
+
+  useEffect(() => {
+    if (!driftClient?.connection || !selectedUser?.account.authority || !spotMarketAccount) {
+      setWalletBalanceBn(undefined);
+      return;
+    }
+
+    let isCancelled = false;
+    const connection = driftClient.connection;
+    const authority = selectedUser.account.authority;
+    const mint = spotMarketAccount.mint;
+
+    const fetchBalance = async () => {
+      try {
+        let balanceLamports: number | string | BN;
+
+        if (mint.equals(WRAPPED_SOL_MINT)) {
+          balanceLamports = await connection.getBalance(authority);
+          if (!isCancelled) {
+            setWalletBalanceBn(new BN(balanceLamports));
+          }
+        } else {
+          const ata = getAssociatedTokenAddressSync(mint, authority);
+          try {
+            const tokenAccountInfo = await connection.getTokenAccountBalance(ata);
+            if (!isCancelled) {
+              if (tokenAccountInfo?.value?.amount) {
+                setWalletBalanceBn(new BN(tokenAccountInfo.value.amount));
+              } else {
+                setWalletBalanceBn(ZERO);
+              }
+            }
+          } catch (error) {
+            console.log(`ATA ${ata.toBase58()} for mint ${mint.toBase58()} not found or error fetching balance:`, error);
+            if (!isCancelled) {
+              setWalletBalanceBn(ZERO);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch wallet balance:", error);
+        if (!isCancelled) {
+          setWalletBalanceBn(undefined);
+        }
+      }
+    };
+
+    fetchBalance();
+
+    return () => {
+      isCancelled = true;
+    };
+
+  }, [driftClient, selectedUser, spotMarketAccount]);
+
+
+  const formattedWalletBalance = useMemo(() => {
+    return formatBalance(walletBalanceBn, spotMarketAccount?.decimals ?? 0);
+  }, [walletBalanceBn, spotMarketAccount]);
 
   const deposit = async () => {
     if (!driftClient || !selectedUser || !spotMarketAccount) {
@@ -76,8 +116,7 @@ const DepositForm = () => {
 
     try {
       const mint = spotMarketAccount.mint;
-      const isSol = mint.toString() === WRAPPED_SOL_MINT.toString();
-      console.log({ isSol });
+      const isSol = mint.equals(WRAPPED_SOL_MINT);
       const decimals = spotMarketAccount.decimals;
       const transferAmount = decimalStrToBN(amountStr, decimals);
 
@@ -92,12 +131,25 @@ const DepositForm = () => {
         return;
       }
 
-      const associatedTokenAccount = isSol ? selectedUser.account.authority : getAssociatedTokenAddressSync(mint, selectedUser.account.authority);
+      if (walletBalanceBn !== undefined && transferAmount.gt(walletBalanceBn)) {
+        toaster.create({
+          title: "Insufficient Wallet Balance",
+          description: `Cannot deposit more than available ${formattedWalletBalance} ${Buffer.from(spotMarketAccount.name).toString()}`,
+          type: "warning",
+          duration: 5000,
+          closable: true,
+        });
+        return;
+      }
+
+      const sourceTokenAccount = isSol
+        ? selectedUser.account.authority
+        : getAssociatedTokenAddressSync(mint, selectedUser.account.authority);
 
       const txSig = await driftClient.deposit(
         transferAmount,
         spotMarketAccount.marketIndex,
-        associatedTokenAccount,
+        sourceTokenAccount,
         selectedUser.account.subAccountId,
       );
 
@@ -141,7 +193,7 @@ const DepositForm = () => {
         <div className="flex items-center space-x-2">
           <AssetSelect
             spotMarketAccount={spotMarketAccount}
-            setSpotMarketAccount={setSpotMarketAccount}
+            setSpotMarketAccount={setSpotMarketAccount as (account: SpotMarketAccount | undefined) => void}
           />
           <Input
             type="text"
@@ -153,6 +205,13 @@ const DepositForm = () => {
             min={0}
           />
         </div>
+        <Box textAlign="right" mt={1} mr={1} height="20px">
+          {spotMarketAccount && selectedUser && (
+            <Text fontSize="xs" color="gray.500">
+              Wallet Balance: {formattedWalletBalance} {Buffer.from(spotMarketAccount.name).toString()}
+            </Text>
+          )}
+        </Box>
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.ActionTrigger asChild>
