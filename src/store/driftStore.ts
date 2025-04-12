@@ -8,14 +8,13 @@ import {
   BulkAccountLoader,
   DriftClient,
   initialize,
-  PerpMarkets,
   User as DriftUser,
   UserAccount,
 } from "@drift-labs/sdk-browser";
 import {connection, FAST_POLLING_INTERVAL} from "@/utils/constants";
 import {EventEmitter} from 'events';
 
-type User = {
+export type User = {
   driftUser: DriftUser;
   account: UserAccount;
 };
@@ -29,7 +28,6 @@ interface DriftState {
   initDriftClient: (wallet: AnchorWallet) => Promise<void>;
   selectUser: (subAccountId: number) => void;
   resetDriftClient: () => void;
-  getMarketSymbol: (marketIndex: number) => string | undefined;
   lastUpdatedAt?: Date;
 }
 
@@ -139,13 +137,6 @@ const useDriftStore = create<DriftState>((set, get) => {
 
       set({ selectedUser });
       await state.driftClient?.switchActiveUser(subAccountId);
-    },
-
-    getMarketSymbol: (marketIndex: number) => {
-      const state = get();
-      if (!state.driftClient) return undefined;
-
-      return PerpMarkets[state.driftClient.env].find((m) => m.marketIndex === marketIndex)?.symbol;
     },
   };
 });

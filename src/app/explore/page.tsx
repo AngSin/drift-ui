@@ -8,16 +8,12 @@ import {
   DriftClient,
   initialize,
   User as DriftUserInternal,
-  UserAccount,
 } from '@drift-labs/sdk-browser';
 import {Wallet} from '@coral-xyz/anchor';
 import {connection, SLOW_POLLING_INTERVAL} from '@/utils/constants';
 import {WalletAdapterNetwork} from "@solana/wallet-adapter-base";
-
-export type ExploreUser = {
-  driftUser: DriftUserInternal;
-  account: UserAccount;
-};
+import {User} from "@/store/driftStore";
+import PositionsPanel from "@/app/PositionsPanel";
 
 const dummyKeypair = Keypair.generate();
 
@@ -26,8 +22,8 @@ const ExplorePage = () => {
   const [targetAddress, setTargetAddress] = useState<PublicKey | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [exploreUsers, setExploreUsers] = useState<ExploreUser[]>([]);
-  const [selectedExploreUser, setSelectedExploreUser] = useState<ExploreUser | null>(null);
+  const [exploreUsers, setExploreUsers] = useState<User[]>([]);
+  const [selectedExploreUser, setSelectedExploreUser] = useState<User | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
   const bulkAccountLoaderRef = useRef<BulkAccountLoader | null>(null);
@@ -146,7 +142,7 @@ const ExplorePage = () => {
       });
 
       const loadedUsersResults = await Promise.all(usersPromises);
-      const loadedUsers = loadedUsersResults.filter(user => user !== null) as ExploreUser[];
+      const loadedUsers = loadedUsersResults.filter(user => user !== null) as User[];
 
       if (loadedUsers.length === 0 && userAccounts.length > 0) {
         console.error("All DriftUser subscriptions failed.");
@@ -201,7 +197,6 @@ const ExplorePage = () => {
 
       {isLoading && <Box display="flex" alignItems="center"><Spinner size="sm" mr={2}/>Loading data...</Box>}
 
-
       {targetAddress && !isLoading && exploreUsers.length > 0 && (
         <Box w="full">
           <Heading size="md" mt={4} mb={2}>Viewing: {targetAddress.toBase58()}</Heading>
@@ -223,6 +218,10 @@ const ExplorePage = () => {
             exploreUsers.length > 0 && <Text>Please select a subaccount.</Text>
           )}
         </Box>
+      )}
+
+      {selectedExploreUser && driftClientRef.current && (
+        <PositionsPanel selectedUser={selectedExploreUser} driftClient={driftClientRef.current} />
       )}
 
       {targetAddress && !isLoading && exploreUsers.length === 0 && error && (

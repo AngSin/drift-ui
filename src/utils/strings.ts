@@ -1,4 +1,5 @@
-import {BN, convertToNumber, ZERO} from "@drift-labs/sdk-browser";
+import {BN, convertToNumber, PerpMarkets, ZERO} from "@drift-labs/sdk-browser";
+import {WalletAdapterNetwork} from "@solana/wallet-adapter-base";
 
 export const shortenAddress = (address: string) => address.slice(0, 4).concat('...').concat(address.slice(-4));
 
@@ -31,3 +32,6 @@ export function formatBalance(balanceBn: BN | undefined, decimals: number): stri
     maximumFractionDigits: decimals,
   });
 }
+
+export const getMarketSymbol = (marketIndex: number): string =>
+  PerpMarkets[WalletAdapterNetwork.Mainnet].find((m) => m.marketIndex === marketIndex)!.symbol;

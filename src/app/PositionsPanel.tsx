@@ -1,10 +1,15 @@
 "use client";
-import useDriftStore from "@/store/driftStore";
+import {User} from "@/store/driftStore";
 import {Table, Tabs} from "@chakra-ui/react";
-import {formatBalance} from "@/utils/strings";
+import {formatBalance, getMarketSymbol} from "@/utils/strings";
+import {DriftClient} from "@drift-labs/sdk-browser";
 
-const PositionsPanel = () => {
-  const { selectedUser, driftClient, getMarketSymbol } = useDriftStore();
+type PositionsPanelProps = {
+  selectedUser: User,
+  driftClient: DriftClient,
+};
+
+const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
   const positions = selectedUser?.driftUser.getActivePerpPositions();
 
   return (
