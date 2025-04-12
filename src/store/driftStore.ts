@@ -12,7 +12,7 @@ import {
   User as DriftUser,
   UserAccount,
 } from "@drift-labs/sdk-browser";
-import {connection, POLLING_INTERVAL} from "@/utils/constants";
+import {connection, FAST_POLLING_INTERVAL} from "@/utils/constants";
 import {EventEmitter} from 'events';
 
 type User = {
@@ -52,7 +52,7 @@ const useDriftStore = create<DriftState>((set, get) => {
 
       const sdkConfig = initialize({ env: WalletAdapterNetwork.Mainnet });
 
-      const bulkAccountLoader = new BulkAccountLoader(connection, 'confirmed', POLLING_INTERVAL);
+      const bulkAccountLoader = new BulkAccountLoader(connection, 'confirmed', FAST_POLLING_INTERVAL);
 
       const driftClient = new DriftClient({
         connection,
