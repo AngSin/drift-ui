@@ -1,21 +1,19 @@
 'use client';
 
-import { create } from 'zustand';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { PublicKey } from '@solana/web3.js';
-import { AnchorWallet } from "@solana/wallet-adapter-react";
+import {create} from 'zustand';
+import {WalletAdapterNetwork} from '@solana/wallet-adapter-base';
+import {PublicKey} from '@solana/web3.js';
+import {AnchorWallet} from "@solana/wallet-adapter-react";
 import {
   BulkAccountLoader,
   DriftClient,
-  fetchUserAccounts,
-  initialize, PerpMarkets,
+  initialize,
+  PerpMarkets,
   User as DriftUser,
   UserAccount,
 } from "@drift-labs/sdk-browser";
-import driftIDL from '@drift-labs/sdk-browser/src/idl/drift.json';
-import { AnchorProvider, Idl, Program } from "@coral-xyz/anchor";
-import { connection, ONE_SECOND_INTERVAL } from "@/utils/constants";
-import { EventEmitter } from 'events';
+import {connection, POLLING_INTERVAL} from "@/utils/constants";
+import {EventEmitter} from 'events';
 
 type User = {
   driftUser: DriftUser;
@@ -31,7 +29,6 @@ interface DriftState {
   initDriftClient: (wallet: AnchorWallet) => Promise<void>;
   selectUser: (subAccountId: number) => void;
   resetDriftClient: () => void;
-  program?: Program;
   getMarketSymbol: (marketIndex: number) => string | undefined;
   lastUpdatedAt?: Date;
 }
@@ -47,7 +44,6 @@ const useDriftStore = create<DriftState>((set, get) => {
     selectedUser: undefined,
     users: [],
     initialized: false,
-    program: undefined,
     lastUpdatedAt: undefined, // Initialize the timestamp
 
     initDriftClient: async (wallet) => {
@@ -56,7 +52,7 @@ const useDriftStore = create<DriftState>((set, get) => {
 
       const sdkConfig = initialize({ env: WalletAdapterNetwork.Mainnet });
 
-      const bulkAccountLoader = new BulkAccountLoader(connection, 'confirmed', ONE_SECOND_INTERVAL);
+      const bulkAccountLoader = new BulkAccountLoader(connection, 'confirmed', POLLING_INTERVAL);
 
       const driftClient = new DriftClient({
         connection,
@@ -73,14 +69,7 @@ const useDriftStore = create<DriftState>((set, get) => {
 
       await driftClient.subscribe();
 
-      const program = new Program(
-        driftIDL as Idl,
-        new PublicKey(sdkConfig.DRIFT_PROGRAM_ID),
-        new AnchorProvider(connection, wallet, {}),
-      );
-
-      // @ts-expect-error program's account prop is slightly different
-      const userAccounts = (await fetchUserAccounts(connection, program, wallet.publicKey)).filter(Boolean);
+      const userAccounts = await driftClient.getUserAccountsForAuthority(wallet.publicKey);
 
       const users = await Promise.all(
         userAccounts.filter(account => !!account).map(async (account) => {
@@ -111,7 +100,6 @@ const useDriftStore = create<DriftState>((set, get) => {
         driftClient,
         selectedUser: users[0],
         users,
-        program,
         initialized: true,
         lastUpdatedAt: new Date(), // Set initial timestamp
       });
@@ -139,7 +127,6 @@ const useDriftStore = create<DriftState>((set, get) => {
         selectedUser: undefined,
         initialized: false,
         users: [],
-        program: undefined,
         bulkAccountLoader: undefined,
         lastUpdatedAt: undefined, // Reset timestamp
       });
