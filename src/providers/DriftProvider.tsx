@@ -7,7 +7,8 @@ import {PropsWithChildren, useEffect} from "react";
 const DriftProvider = (props: PropsWithChildren) => {
   const wallet = useAnchorWallet();
 
-  const { initDriftClient, resetDriftClient } = useDriftStore();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { initDriftClient, resetDriftClient, positionsUpdatedAt } = useDriftStore();
 
   useEffect(() => {
     if (wallet) {

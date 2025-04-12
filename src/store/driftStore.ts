@@ -33,7 +33,8 @@ interface DriftState {
   resetDriftClient: () => void;
   program?: Program;
   getMarketSymbol: (marketIndex: number) => string | undefined;
-  positionsUpdatedAt: number;
+  positionsUpdatedAt?: Date;
+  interval?: NodeJS.Timeout;
 }
 
 const useDriftStore = create<DriftState>((set, get) => ({
@@ -43,7 +44,8 @@ const useDriftStore = create<DriftState>((set, get) => ({
   users: [],
   initialized: false,
   program: undefined,
-  positionsUpdatedAt: 0,
+  positionsUpdatedAt: undefined,
+  interval: undefined,
 
   initDriftClient: async (wallet) => {
     console.log("Initializing Drift client...");
@@ -101,6 +103,9 @@ const useDriftStore = create<DriftState>((set, get) => ({
       users,
       program,
       initialized: true,
+      interval: setInterval(async () => {
+        set({ positionsUpdatedAt: new Date() });
+      }, ONE_SECOND_INTERVAL),
     });
   },
 
@@ -108,11 +113,13 @@ const useDriftStore = create<DriftState>((set, get) => ({
     const state = get();
     state.selectedUser?.driftUser.unsubscribe();
     state.driftClient?.unsubscribe();
+    clearInterval(state.interval);
     set({
       driftClient: undefined,
       selectedUser: undefined,
       initialized: false,
       users: [],
+      interval: undefined,
     });
   },
 
