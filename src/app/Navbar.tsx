@@ -2,7 +2,7 @@
 import {useWallet} from '@solana/wallet-adapter-react';
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 // import {getAssociatedTokenAddress} from "@solana/spl-token";
-import AccountsDrawer from "@/components/AccountsDrawer";
+import AccountsDrawer from "@/app/AccountsDrawer";
 
 const Navbar = () => {
   const { connected, connecting, publicKey: userPubKey } = useWallet();

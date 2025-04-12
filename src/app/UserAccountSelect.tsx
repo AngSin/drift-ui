@@ -3,7 +3,11 @@
 import { Select, createListCollection } from "@chakra-ui/react"
 import useDriftStore from "@/store/driftStore";
 
-const UserAccountSelect = () => {
+type UserAccountSelectProps = {
+  label: string;
+}
+
+const UserAccountSelect = ({ label }: UserAccountSelectProps) => {
   const { users, selectUser, selectedUser } = useDriftStore();
   const userCollection = createListCollection({ items: users.map(user => ({ key: user.account.subAccountId, value: Buffer.from(user.account.name).toString() })) });
   return (
@@ -13,7 +17,7 @@ const UserAccountSelect = () => {
       size="sm"
       width="320px"
     >
-      <Select.Label>Deposit to:</Select.Label>
+      <Select.Label>{label}</Select.Label>
       <Select.Control>
         <Select.Trigger>
           <Select.ValueText placeholder={Buffer.from(selectedUser?.account.name || []).toString()} />

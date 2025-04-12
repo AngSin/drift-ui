@@ -6,7 +6,7 @@ import {convertToNumber, QUOTE_PRECISION} from "@drift-labs/sdk-browser";
 import {useEffect, useState} from "react";
 import {connection} from "@/utils/constants";
 import {LAMPORTS_PER_SOL} from "@solana/web3.js";
-import TransferDialog from "@/components/TransferDialog";
+import TransferDialog from "@/app/TransferDialog";
 
 const AccountsDrawer = () => {
   const [walletBalance, setWalletBalance] = useState<string>('0.0');

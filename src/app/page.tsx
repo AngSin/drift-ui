@@ -1,5 +1,5 @@
 "use client";
-import PositionsPanel from "@/components/PositionsPanel";
+import PositionsPanel from "@/app/PositionsPanel";
 
 export default function Home() {
   return (

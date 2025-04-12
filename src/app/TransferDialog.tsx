@@ -1,6 +1,7 @@
 "use client";
-import {Button, CloseButton, Dialog} from "@chakra-ui/react"
+import {Button, CloseButton, Dialog, Tabs} from "@chakra-ui/react"
 import DepositForm from "./DepositForm";
+import WithdrawForm from "@/app/WithdrawForm";
 
 const TransferDialog = () => {
   return (
@@ -16,7 +17,22 @@ const TransferDialog = () => {
           <Dialog.Header>
             <Dialog.Title>Manage Balances</Dialog.Title>
           </Dialog.Header>
-          <DepositForm />
+          <Tabs.Root defaultValue="deposit">
+            <Tabs.List>
+              <Tabs.Trigger value="deposit">
+                Deposit
+              </Tabs.Trigger>
+              <Tabs.Trigger value="withdraw">
+                Withdraw
+              </Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="deposit">
+              <DepositForm />
+            </Tabs.Content>
+            <Tabs.Content value="withdraw">
+              <WithdrawForm />
+            </Tabs.Content>
+          </Tabs.Root>
           <Dialog.CloseTrigger asChild>
             <CloseButton size="sm" />
           </Dialog.CloseTrigger>
