@@ -1,21 +1,21 @@
 'use client';
 
-import {create} from 'zustand';
-import {WalletAdapterNetwork} from '@solana/wallet-adapter-base';
-import {PublicKey} from '@solana/web3.js';
-import {AnchorWallet} from "@solana/wallet-adapter-react";
+import { create } from 'zustand';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { PublicKey } from '@solana/web3.js';
+import { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   BulkAccountLoader,
   DriftClient,
   fetchUserAccounts,
-  initialize,
-  PerpMarkets,
+  initialize, PerpMarkets,
   User as DriftUser,
   UserAccount,
 } from "@drift-labs/sdk-browser";
 import driftIDL from '@drift-labs/sdk-browser/src/idl/drift.json';
-import {AnchorProvider, Idl, Program} from "@coral-xyz/anchor";
-import {connection, ONE_SECOND_INTERVAL} from "@/utils/constants";
+import { AnchorProvider, Idl, Program } from "@coral-xyz/anchor";
+import { connection, ONE_SECOND_INTERVAL } from "@/utils/constants";
+import { EventEmitter } from 'events';
 
 type User = {
   driftUser: DriftUser;
@@ -33,111 +33,134 @@ interface DriftState {
   resetDriftClient: () => void;
   program?: Program;
   getMarketSymbol: (marketIndex: number) => string | undefined;
-  positionsUpdatedAt?: Date;
-  interval?: NodeJS.Timeout;
+  lastUpdatedAt?: Date;
 }
 
-const useDriftStore = create<DriftState>((set, get) => ({
-  bulkAccountLoader: undefined,
-  driftClient: undefined,
-  selectedUser: undefined,
-  users: [],
-  initialized: false,
-  program: undefined,
-  positionsUpdatedAt: undefined,
-  interval: undefined,
+const useDriftStore = create<DriftState>((set, get) => {
+  const handleSdkUpdate = () => {
+    set({ lastUpdatedAt: new Date() });
+  };
 
-  initDriftClient: async (wallet) => {
-    console.log("Initializing Drift client...");
-    const sdkConfig = initialize({ env: WalletAdapterNetwork.Mainnet });
+  return {
+    bulkAccountLoader: undefined,
+    driftClient: undefined,
+    selectedUser: undefined,
+    users: [],
+    initialized: false,
+    program: undefined,
+    lastUpdatedAt: undefined, // Initialize the timestamp
 
-    const bulkAccountLoader = new BulkAccountLoader(connection, 'confirmed', ONE_SECOND_INTERVAL); // Polls every 1s
+    initDriftClient: async (wallet) => {
+      console.log("initializing drift client");
+      get().resetDriftClient(); // Ensure clean slate
 
-    const driftClient = new DriftClient({
-      connection,
-      wallet,
-      programID: new PublicKey(sdkConfig.DRIFT_PROGRAM_ID),
-      accountSubscription: {
-        type: 'polling',
-        accountLoader: bulkAccountLoader,
-      },
-    });
+      const sdkConfig = initialize({ env: WalletAdapterNetwork.Mainnet });
 
-    await driftClient.subscribe();
+      const bulkAccountLoader = new BulkAccountLoader(connection, 'confirmed', ONE_SECOND_INTERVAL);
 
-    const program = new Program(
-      driftIDL as Idl,
-      new PublicKey(sdkConfig.DRIFT_PROGRAM_ID),
-      new AnchorProvider(connection, wallet, {}),
-    );
+      const driftClient = new DriftClient({
+        connection,
+        wallet,
+        programID: new PublicKey(sdkConfig.DRIFT_PROGRAM_ID),
+        accountSubscription: {
+          type: 'polling',
+          accountLoader: bulkAccountLoader,
+        },
+      });
 
-    // @ts-expect-error program's account prop is slightly different
-    const userAccounts = (await fetchUserAccounts(connection, program, wallet.publicKey)).filter(Boolean);
+      (driftClient.eventEmitter as EventEmitter)?.on('update', handleSdkUpdate);
 
-    const users = await Promise.all(
-      userAccounts.filter(account => !!account).map(async (account) => {
-        const userAccountPublicKey = await driftClient.getUserAccountPublicKey(account.subAccountId, wallet.publicKey);
 
-        const driftUser = new DriftUser({
-          driftClient,
-          userAccountPublicKey,
-          accountSubscription: {
-            type: 'polling',
-            accountLoader: bulkAccountLoader,
-          }
-        });
+      await driftClient.subscribe();
 
-        await driftUser.subscribe();
+      const program = new Program(
+        driftIDL as Idl,
+        new PublicKey(sdkConfig.DRIFT_PROGRAM_ID),
+        new AnchorProvider(connection, wallet, {}),
+      );
 
-        return {
-          driftUser,
-          account,
-        };
-      })
-    );
+      // @ts-expect-error program's account prop is slightly different
+      const userAccounts = (await fetchUserAccounts(connection, program, wallet.publicKey)).filter(Boolean);
 
-    set({
-      bulkAccountLoader,
-      driftClient,
-      selectedUser: users[0],
-      users,
-      program,
-      initialized: true,
-      interval: setInterval(async () => {
-        set({ positionsUpdatedAt: new Date() });
-      }, ONE_SECOND_INTERVAL),
-    });
-  },
+      const users = await Promise.all(
+        userAccounts.filter(account => !!account).map(async (account) => {
+          const userAccountPublicKey = await driftClient.getUserAccountPublicKey(account.subAccountId, wallet.publicKey);
 
-  resetDriftClient: () => {
-    const state = get();
-    state.selectedUser?.driftUser.unsubscribe();
-    state.driftClient?.unsubscribe();
-    clearInterval(state.interval);
-    set({
-      driftClient: undefined,
-      selectedUser: undefined,
-      initialized: false,
-      users: [],
-      interval: undefined,
-    });
-  },
+          const driftUser = new DriftUser({
+            driftClient,
+            userAccountPublicKey,
+            accountSubscription: {
+              type: 'polling',
+              accountLoader: bulkAccountLoader,
+            }
+          });
 
-  selectUser: async (subAccountId: number) => {
-    const state = get();
-    const selectedUser = state.users.find((u) => u.account.subAccountId === subAccountId);
-    if (!selectedUser) return;
+          driftUser.eventEmitter.on('update', handleSdkUpdate);
 
-    set({ selectedUser });
-    await state.driftClient?.switchActiveUser(subAccountId);
-  },
+          await driftUser.subscribe();
 
-  getMarketSymbol: (marketIndex: number) => {
-    const state = get();
-    if (!state.driftClient) return undefined;
+          return {
+            driftUser,
+            account,
+          };
+        })
+      );
 
-    return PerpMarkets[state.driftClient.env].find((m) => m.marketIndex === marketIndex)?.symbol;
-  },
-}));
+      set({
+        bulkAccountLoader,
+        driftClient,
+        selectedUser: users[0],
+        users,
+        program,
+        initialized: true,
+        lastUpdatedAt: new Date(), // Set initial timestamp
+      });
+    },
+
+    resetDriftClient: () => {
+      const state = get();
+
+      if (state.driftClient) {
+        (state.driftClient.eventEmitter as EventEmitter)?.off('update', handleSdkUpdate);
+      }
+      state.users.forEach(user => {
+        (user.driftUser.eventEmitter as EventEmitter)?.off('update', handleSdkUpdate);
+      });
+
+      state.users.forEach(user => {
+        user.driftUser.unsubscribe().catch(e => console.error("Error unsubscribing DriftUser:", e));
+      });
+      state.driftClient?.unsubscribe().catch(e => console.error("Error unsubscribing DriftClient:", e));
+
+      state.bulkAccountLoader?.stopPolling();
+
+      set({
+        driftClient: undefined,
+        selectedUser: undefined,
+        initialized: false,
+        users: [],
+        program: undefined,
+        bulkAccountLoader: undefined,
+        lastUpdatedAt: undefined, // Reset timestamp
+      });
+    },
+
+    selectUser: async (subAccountId: number) => {
+      const state = get();
+      const selectedUser = state.users.find((u) => u.account.subAccountId === subAccountId);
+      if (!selectedUser || selectedUser === state.selectedUser) return; // Avoid unnecessary updates
+
+      set({ selectedUser });
+      await state.driftClient?.switchActiveUser(subAccountId);
+    },
+
+    getMarketSymbol: (marketIndex: number) => {
+      const state = get();
+      if (!state.driftClient) return undefined;
+
+      return PerpMarkets[state.driftClient.env].find((m) => m.marketIndex === marketIndex)?.symbol;
+    },
+  };
+});
 
 export default useDriftStore;
