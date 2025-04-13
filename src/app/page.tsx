@@ -8,7 +8,7 @@ export default function Home() {
   const { selectedUser, driftClient } = useDriftStore();
   return (
     <div className="flex w-full">
-      <Box borderWidth={1} borderRadius="lg" p={4} className="flex flex-col h-screen w-full bg-gray-950" margin="2">
+      <Box borderWidth={1} borderRadius="lg" p={4} className="flex flex-col h-screen w-full" margin="2" bg={{ base: 'gray.100', _dark: 'gray.950' }}>
         <div className="h-1/2 border-b border-gray-200"></div>
         <div className="h-1/2 overflow-auto">
           {selectedUser && driftClient && (

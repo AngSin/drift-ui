@@ -1,5 +1,4 @@
 'use client';
-
 import React from 'react';
 import {Box, Stack, Tabs,} from '@chakra-ui/react';
 import {OrderType,} from '@drift-labs/sdk-browser';
@@ -7,7 +6,7 @@ import TradingTabs from "@/app/TradingTabs";
 
 const TradingPanel = () => {
   return (
-    <Box borderWidth={1} borderRadius="lg" p={4} className="h-full bg-gray-950" margin="2">
+    <Box borderWidth={1} borderRadius="lg" p={4} className="h-full" margin="2" bg={{ base: 'gray.100', _dark: 'gray.950' }}>
       <Stack gap={4}>
         <Tabs.Root defaultValue="market" variant="line" size="sm">
           <Tabs.List>

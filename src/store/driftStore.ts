@@ -62,8 +62,7 @@ const useDriftStore = create<DriftState>((set, get) => {
         },
       });
 
-      (driftClient.eventEmitter as EventEmitter)?.on('update', handleSdkUpdate);
-
+      driftClient.eventEmitter.on('update', handleSdkUpdate);
 
       await driftClient.subscribe();
 

@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type {Metadata} from "next";
+import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 import Providers from '@/providers/index';
 import Navbar from "@/app/Navbar";
-import { Theme } from "@chakra-ui/react";
+import {Toaster} from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +31,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <Theme appearance="dark">
-            <Navbar />
-            {children}
-          </Theme>
+          <Navbar />
+          {children}
+          <Toaster />
         </Providers>
       </body>
     </html>
