@@ -6,3 +6,7 @@
 - The theme matches your system's
 - Trading with TP & SL
 - view your and others positions & orders
+
+### Running
+
+- Requires a good solana rpc url such as a paid Helius rpc url (due to rate limiting)
