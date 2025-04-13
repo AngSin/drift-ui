@@ -8,7 +8,7 @@ import {SpotMarketAccount, WRAPPED_SOL_MINT, ZERO} from "@drift-labs/sdk-browser
 import {useMemo, useState} from "react";
 import {getAssociatedTokenAddressSync} from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
-import {decimalStrToBN, formatBalance} from "@/utils/strings";
+import {decimalStrToBN, formatBigNum} from "@/utils/strings";
 
 const solscanBaseUrl = `https://solscan.io/tx`;
 
@@ -43,7 +43,7 @@ const WithdrawForm = () => {
     if (spotMarketAccount === undefined || availableBalanceBn === undefined) {
       return '0.00';
     }
-    return formatBalance(availableBalanceBn, spotMarketAccount.decimals);
+    return formatBigNum(availableBalanceBn, spotMarketAccount.decimals);
   }, [availableBalanceBn, spotMarketAccount]);
 
 
@@ -152,7 +152,7 @@ const WithdrawForm = () => {
         <div>Withdrawal Amount</div>
         <div className="flex items-center space-x-2">
           <AssetSelect<SpotMarketAccount>
-            marketAccount={spotMarketAccount}
+            selectedMarketAccount={spotMarketAccount}
             setMarketAccount={setSpotMarketAccount}
             marketAccounts={driftClient.getSpotMarketAccounts()}
           />

@@ -1,16 +1,14 @@
 "use client";
 import {useWallet} from '@solana/wallet-adapter-react';
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
-// import {getAssociatedTokenAddress} from "@solana/spl-token";
 import AccountsDrawer from "@/app/AccountsDrawer";
 import {Box, Link} from "@chakra-ui/react";
 
 const Navbar = () => {
   const { connected, connecting, publicKey: userPubKey } = useWallet();
 
-
   return (
-    <Box borderWidth={1} borderRadius="lg" p={2} className="flex justify-between bg-gray-950" margin="2">
+    <Box borderWidth={1} p={5} className="flex justify-between">
       <div className="flex justify-start gap-2 items-center m-2">
         <Link href="/">Trade</Link>&nbsp;|&nbsp;
         <Link href="/explore">Explore</Link>

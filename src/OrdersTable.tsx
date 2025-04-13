@@ -1,6 +1,6 @@
 import {Table} from "@chakra-ui/react";
 import {Order} from "@drift-labs/sdk-browser";
-import {formatBalance, getMarketSymbol} from "@/utils/strings";
+import {formatBigNum, getMarketSymbol} from "@/utils/strings";
 
 type OrdersTableProps = {
   orders: Order[];
@@ -27,8 +27,8 @@ const OrdersTable = ({ orders }: OrdersTableProps) => {
                 {getMarketSymbol(order.marketIndex)}
               </Table.Cell>
               <Table.Cell>{Object.keys(order.orderType)[0]}</Table.Cell>
-              <Table.Cell>{formatBalance(order.baseAssetAmount, 9)}</Table.Cell>
-              <Table.Cell>${formatBalance(order.triggerPrice,  6)}</Table.Cell>
+              <Table.Cell>{formatBigNum(order.baseAssetAmount, 9)}</Table.Cell>
+              <Table.Cell>${formatBigNum(order.triggerPrice,  6)}</Table.Cell>
             </Table.Row>
           )
         })}

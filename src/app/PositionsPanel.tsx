@@ -1,7 +1,7 @@
 "use client";
 import {User} from "@/store/driftStore";
 import {Table, Tabs} from "@chakra-ui/react";
-import {formatBalance, getMarketSymbol} from "@/utils/strings";
+import {formatBigNum, getMarketSymbol} from "@/utils/strings";
 import {DriftClient} from "@drift-labs/sdk-browser";
 import OrdersTable from "@/OrdersTable";
 
@@ -42,9 +42,9 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
                     <Table.Cell>
                       {getMarketSymbol(position.marketIndex)}
                     </Table.Cell>
-                    <Table.Cell>{formatBalance(position.baseAssetAmount, 9)}</Table.Cell>
-                    <Table.Cell>${formatBalance(driftClient.getUser().getUnrealizedPNL(true, position.marketIndex),  6)}</Table.Cell>
-                    <Table.Cell>${formatBalance(driftClient.getOracleDataForPerpMarket(position.marketIndex).price, 6)}</Table.Cell>
+                    <Table.Cell>{formatBigNum(position.baseAssetAmount, 9)}</Table.Cell>
+                    <Table.Cell>${formatBigNum(driftClient.getUser().getUnrealizedPNL(true, position.marketIndex),  6)}</Table.Cell>
+                    <Table.Cell>${formatBigNum(driftClient.getOracleDataForPerpMarket(position.marketIndex).price, 6)}</Table.Cell>
                   </Table.Row>
                 )
               })}

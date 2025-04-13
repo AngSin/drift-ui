@@ -8,8 +8,7 @@ import { SpotMarketAccount, WRAPPED_SOL_MINT, ZERO, BN } from "@drift-labs/sdk-b
 import { useState, useEffect, useMemo } from "react";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
-import { decimalStrToBN, formatBalance } from "@/utils/strings";
-
+import { decimalStrToBN, formatBigNum } from "@/utils/strings";
 
 const solscanBaseUrl = `https://solscan.io/tx`;
 
@@ -89,7 +88,7 @@ const DepositForm = () => {
 
 
   const formattedWalletBalance = useMemo(() => {
-    return formatBalance(walletBalanceBn, spotMarketAccount?.decimals ?? 0);
+    return formatBigNum(walletBalanceBn, spotMarketAccount?.decimals ?? 0);
   }, [walletBalanceBn, spotMarketAccount]);
 
   const deposit = async () => {
@@ -195,7 +194,7 @@ const DepositForm = () => {
         <div>Transfer type and Amount</div>
         <div className="flex items-center space-x-2">
           <AssetSelect<SpotMarketAccount>
-            marketAccount={spotMarketAccount}
+            selectedMarketAccount={spotMarketAccount}
             setMarketAccount={setSpotMarketAccount}
             marketAccounts={driftClient.getSpotMarketAccounts()}
           />

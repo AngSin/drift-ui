@@ -6,13 +6,13 @@ import {PerpMarketAccount, SpotMarketAccount} from "@drift-labs/sdk-browser";
 type MarketAccount = SpotMarketAccount | PerpMarketAccount;
 
 type AssetSelectProps<T extends MarketAccount> = {
-  marketAccount?: T;
+  selectedMarketAccount?: T;
   setMarketAccount: (account?: T) => void;
   marketAccounts: T[];
 };
 
 const AssetSelect = <T extends MarketAccount>({
-  marketAccount,
+  selectedMarketAccount,
   setMarketAccount,
   marketAccounts
 }: AssetSelectProps<T>) => {
@@ -28,12 +28,19 @@ const AssetSelect = <T extends MarketAccount>({
     <Select.Root
       variant="subtle"
       collection={assetCollection}
-      size="sm"
+      size="md"
       width="320px"
+      value={selectedMarketAccount ? [selectedMarketAccount.marketIndex.toString()] : []}
     >
       <Select.Control>
         <Select.Trigger>
-          <Select.ValueText placeholder={assetCollection.items[0]?.value} />
+          <Select.ValueText>
+            {
+              assetCollection.items.find(i =>
+                i.key.toString() === selectedMarketAccount?.marketIndex.toString()
+              )?.value || 'Select Asset'
+            }
+          </Select.ValueText>
         </Select.Trigger>
         <Select.IndicatorGroup>
           <Select.Indicator />
@@ -48,7 +55,7 @@ const AssetSelect = <T extends MarketAccount>({
               onClick={() => setMarketAccount(asset)}
             >
               {asset.value}
-              {marketAccount?.marketIndex === asset.key && <Select.ItemIndicator />}
+              {selectedMarketAccount?.marketIndex === asset.key && <Select.ItemIndicator />}
             </Select.Item>
           ))}
         </Select.Content>
