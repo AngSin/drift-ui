@@ -175,63 +175,64 @@ const ExplorePage = () => {
     }))
   });
 
-
   return (
-    <Stack gap="4" direction="column" wrap="wrap" marginTop={2} align="stretch">
-      <Heading size="lg">Explore Wallet</Heading>
-      <Text>Enter a Solana wallet address to view its Drift subaccounts and positions (read-only).</Text>
-      <Box>
-        <Text as="label" mb={1} display="block" fontWeight="medium">Wallet Address</Text>
-        <Input id="walletAddress" placeholder="Enter Solana wallet address (e.g., So11...)" value={inputAddress} onChange={(e) => { setInputAddress(e.target.value); if (error) setError(null); if (e.target.value === '') { cleanupSubscriptions(); setTargetAddress(null); } }} disabled={isLoading}/>
-        {error && !isLoading && (<Text color="red.500" fontSize="sm" mt={1}>{error}</Text>)}
-      </Box>
-
-      <Button
-        onClick={handleLoadWallet}
-        loading={isLoading}
-        disabled={!inputAddress || isLoading}
-        colorScheme="teal"
-      >
-        {isLoading ? 'Loading...' : 'Load Wallet Data'}
-      </Button>
-
-      {isLoading && <Box display="flex" alignItems="center"><Spinner size="sm" mr={2}/>Loading data...</Box>}
-
-      {targetAddress && !isLoading && exploreUsers.length > 0 && (
-        <Box w="full">
-          <Heading size="md" mt={4} mb={2}>Viewing: {targetAddress.toBase58()}</Heading>
-          <Select.Root collection={userSubAccountCollection}>
-            <Select.Label>Select Subaccount:</Select.Label>
-            <Select.Control><Select.Trigger><Select.ValueText placeholder={Buffer.from(selectedExploreUser?.account.name || []).toString()} /></Select.Trigger></Select.Control>
-            <Select.Positioner><Select.Content>
-              {userSubAccountCollection.items.map((item) => (
-                <Select.Item key={item.key} item={item} onClick={() => setSelectedExploreUser(item)}>{item.value}<Select.ItemIndicator /></Select.Item>
-              ))}
-            </Select.Content></Select.Positioner>
-          </Select.Root>
-
-          {selectedExploreUser ? (
-            <>
-              <Text fontSize="xs" color="gray.500" mt={2}>Last updated: {lastUpdatedAt?.toLocaleTimeString() ?? 'N/A'}</Text>
-            </>
-          ) : (
-            exploreUsers.length > 0 && <Text>Please select a subaccount.</Text>
-          )}
+    <Box p={10} m={2} borderWidth={1} borderRadius="lg">
+      <Stack gap="4" direction="column" wrap="wrap" marginTop={2} align="stretch">
+        <Heading size="lg">Explore Wallet</Heading>
+        <Text>Enter a Solana wallet address to view its Drift subaccounts and positions (read-only).</Text>
+        <Box>
+          <Text as="label" mb={1} display="block" fontWeight="medium">Wallet Address</Text>
+          <Input id="walletAddress" placeholder="Enter Solana wallet address (e.g., So11...)" value={inputAddress} onChange={(e) => { setInputAddress(e.target.value); if (error) setError(null); if (e.target.value === '') { cleanupSubscriptions(); setTargetAddress(null); } }} disabled={isLoading}/>
+          {error && !isLoading && (<Text color="red.500" fontSize="sm" mt={1}>{error}</Text>)}
         </Box>
-      )}
 
-      {selectedExploreUser && driftClientRef.current && (
-        <PositionsPanel selectedUser={selectedExploreUser} driftClient={driftClientRef.current} />
-      )}
+        <Button
+          onClick={handleLoadWallet}
+          loading={isLoading}
+          disabled={!inputAddress || isLoading}
+          colorScheme="teal"
+        >
+          {isLoading ? 'Loading...' : 'Load Wallet Data'}
+        </Button>
 
-      {targetAddress && !isLoading && exploreUsers.length === 0 && error && (
-        <Alert.Root status='info' mt={4}>
-          <Alert.Content>
-            <Alert.Title>{error}</Alert.Title>
-          </Alert.Content>
-        </Alert.Root>
-      )}
-    </Stack>
+        {isLoading && <Box display="flex" alignItems="center"><Spinner size="sm" mr={2}/>Loading data...</Box>}
+
+        {targetAddress && !isLoading && exploreUsers.length > 0 && (
+          <Box w="full">
+            <Heading size="md" mt={4} mb={2}>Viewing: {targetAddress.toBase58()}</Heading>
+            <Select.Root collection={userSubAccountCollection}>
+              <Select.Label>Select Subaccount:</Select.Label>
+              <Select.Control><Select.Trigger><Select.ValueText placeholder={Buffer.from(selectedExploreUser?.account.name || []).toString()} /></Select.Trigger></Select.Control>
+              <Select.Positioner><Select.Content>
+                {userSubAccountCollection.items.map((item) => (
+                  <Select.Item key={item.key} item={item} onClick={() => setSelectedExploreUser(item)}>{item.value}<Select.ItemIndicator /></Select.Item>
+                ))}
+              </Select.Content></Select.Positioner>
+            </Select.Root>
+
+            {selectedExploreUser ? (
+              <>
+                <Text fontSize="xs" color="gray.500" mt={2}>Last updated: {lastUpdatedAt?.toLocaleTimeString() ?? 'N/A'}</Text>
+              </>
+            ) : (
+              exploreUsers.length > 0 && <Text>Please select a subaccount.</Text>
+            )}
+          </Box>
+        )}
+
+        {selectedExploreUser && driftClientRef.current && (
+          <PositionsPanel selectedUser={selectedExploreUser} driftClient={driftClientRef.current} />
+        )}
+
+        {targetAddress && !isLoading && exploreUsers.length === 0 && error && (
+          <Alert.Root status='info' mt={4}>
+            <Alert.Content>
+              <Alert.Title>{error}</Alert.Title>
+            </Alert.Content>
+          </Alert.Root>
+        )}
+      </Stack>
+    </Box>
   );
 };
 

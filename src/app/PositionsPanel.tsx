@@ -30,6 +30,7 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
             <Table.Header>
               <Table.Row>
                 <Table.ColumnHeader>Market</Table.ColumnHeader>
+                <Table.ColumnHeader>Direction</Table.ColumnHeader>
                 <Table.ColumnHeader>Size</Table.ColumnHeader>
                 <Table.ColumnHeader>PnL</Table.ColumnHeader>
                 <Table.ColumnHeader>Market Price</Table.ColumnHeader>
@@ -42,7 +43,8 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
                     <Table.Cell>
                       {getMarketSymbol(position.marketIndex)}
                     </Table.Cell>
-                    <Table.Cell>{formatBigNum(position.baseAssetAmount, 9)}</Table.Cell>
+                    <Table.Cell>{position.baseAssetAmount.isNeg() ? 'SHORT' : 'LONG'}</Table.Cell>
+                    <Table.Cell>{formatBigNum(position.baseAssetAmount.abs(), 9)}</Table.Cell>
                     <Table.Cell>${formatBigNum(driftClient.getUser().getUnrealizedPNL(true, position.marketIndex),  6)}</Table.Cell>
                     <Table.Cell>${formatBigNum(driftClient.getOracleDataForPerpMarket(position.marketIndex).price, 6)}</Table.Cell>
                   </Table.Row>
