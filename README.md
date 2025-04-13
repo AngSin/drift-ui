@@ -10,3 +10,4 @@
 ### Running
 
 - Requires a good solana rpc url such as a paid Helius rpc url (due to rate limiting)
+- Or you can view the deployed application [here](https://main.d24xsv4ry77i4x.amplifyapp.com/)
