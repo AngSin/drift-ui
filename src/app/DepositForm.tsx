@@ -1,7 +1,6 @@
 'use client';
 
-import { Box, Button, Dialog, Input, Link, Text } from "@chakra-ui/react";
-import { toaster } from "@/components/ui/toaster";
+import { Box, Button, Dialog, Input, Text } from "@chakra-ui/react";
 import UserAccountSelect from "@/app/UserAccountSelect";
 import AssetSelect from "@/app/AssetSelect";
 import { SpotMarketAccount, WRAPPED_SOL_MINT, ZERO, BN } from "@drift-labs/sdk-browser";
@@ -9,8 +8,7 @@ import { useState, useEffect, useMemo } from "react";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
 import { decimalStrToBN, formatBigNum } from "@/utils/strings";
-
-const solscanBaseUrl = `https://solscan.io/tx`;
+import {toast} from "react-toastify";
 
 const DepositForm = () => {
   const [amountStr, setAmountStr] = useState<string>("0");
@@ -80,23 +78,11 @@ const DepositForm = () => {
 
   const deposit = async () => {
     if (!driftClient || !selectedUser || !spotMarketAccount) {
-      toaster.create({
-        title: "Missing Information",
-        description: "Please wait or reload the page",
-        type: "error",
-        duration: 5000,
-        closable: true,
-      });
+      toast.error( "Missing Information");
       return;
     }
     if (!amountStr || parseFloat(amountStr) <= 0) {
-      toaster.create({
-        title: "Invalid Amount",
-        description: "Please enter a valid deposit amount.",
-        type: "error",
-        duration: 5000,
-        closable: true,
-      });
+      toast.error("Invalid Amount");
       return;
     }
 
@@ -107,24 +93,12 @@ const DepositForm = () => {
       const transferAmount = decimalStrToBN(amountStr, decimals);
 
       if (transferAmount.isZero()) {
-        toaster.create({
-          title: "Invalid Amount",
-          description: "Deposit amount cannot be zero.",
-          type: "error",
-          duration: 5000,
-          closable: true,
-        });
+        toast.error("Invalid Amount");
         return;
       }
 
       if (walletBalanceBn !== undefined && transferAmount.gt(walletBalanceBn)) {
-        toaster.create({
-          title: "Insufficient Wallet Balance",
-          description: `Cannot deposit more than available ${formattedWalletBalance} ${Buffer.from(spotMarketAccount.name).toString()}`,
-          type: "warning",
-          duration: 5000,
-          closable: true,
-        });
+        toast.error("Insufficient Wallet Balance");
         return;
       }
 
@@ -132,38 +106,19 @@ const DepositForm = () => {
         ? selectedUser.account.authority
         : getAssociatedTokenAddressSync(mint, selectedUser.account.authority);
 
-      const txSig = await driftClient.deposit(
+      await driftClient.deposit(
         transferAmount,
         spotMarketAccount.marketIndex,
         sourceTokenAccount,
         selectedUser.account.subAccountId,
       );
 
-      toaster.create({
-        title: "Deposit Submitted",
-        type: "success",
-        duration: 9000,
-        closable: true,
-        description: (
-          <Box>
-            Transaction sent successfully.{" "}
-            <Link href={`${solscanBaseUrl}/${txSig}`} color="teal.500" fontWeight="bold">
-              View on Solscan
-            </Link>
-          </Box>
-        ),
-      });
+      toast.success("Deposit Submitted");
       setAmountStr("0");
 
     } catch (error) {
       console.error("Deposit failed:", error);
-      toaster.create({
-        title: "Deposit Failed",
-        description: (error as Error)?.message || "An unknown error occurred.",
-        type: "error",
-        duration: 9000,
-        closable: true,
-      });
+      toast.error("Deposit Failed");
     }
   };
 

@@ -1,7 +1,6 @@
 'use client';
 
-import {Box, Button, Dialog, Input, Link, Text} from "@chakra-ui/react";
-import {toaster} from "@/components/ui/toaster";
+import {Box, Button, Dialog, Input, Text} from "@chakra-ui/react";
 import UserAccountSelect from "@/app/UserAccountSelect";
 import AssetSelect from "@/app/AssetSelect";
 import {SpotMarketAccount, WRAPPED_SOL_MINT, ZERO} from "@drift-labs/sdk-browser";
@@ -9,8 +8,8 @@ import {useMemo, useState} from "react";
 import {getAssociatedTokenAddressSync} from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
 import {decimalStrToBN, formatBigNum} from "@/utils/strings";
+import {toast} from "react-toastify";
 
-const solscanBaseUrl = `https://solscan.io/tx`;
 
 const WithdrawForm = () => {
   const [amountStr, setAmountStr] = useState<string>("0");
@@ -49,23 +48,11 @@ const WithdrawForm = () => {
 
   const withdraw = async () => {
     if (!driftClient || !selectedUser || !spotMarketAccount || availableBalanceBn === undefined) {
-      toaster.create({
-        title: "Missing Information",
-        description: "Please wait or reload the page",
-        type: "error",
-        duration: 5000,
-        closable: true,
-      });
+      toast.error("Missing Information");
       return;
     }
     if (!amountStr || parseFloat(amountStr) <= 0) {
-      toaster.create({
-        title: "Invalid Amount",
-        description: "Please enter a valid withdrawal amount.",
-        type: "error",
-        duration: 5000,
-        closable: true,
-      });
+      toast.error("Invalid Amount");
       return;
     }
 
@@ -76,24 +63,12 @@ const WithdrawForm = () => {
       const transferAmount = decimalStrToBN(amountStr, decimals);
 
       if (transferAmount.isZero()) {
-        toaster.create({
-          title: "Invalid Amount",
-          description: "Withdrawal amount cannot be zero.",
-          type: "error",
-          duration: 5000,
-          closable: true,
-        });
+        toast.error("Invalid Amount");
         return;
       }
 
       if (transferAmount.gt(availableBalanceBn)) {
-        toaster.create({
-          title: "Insufficient Balance",
-          description: `Cannot withdraw more than available ${formattedBalance} ${Buffer.from(spotMarketAccount.name).toString()}`,
-          type: "error",
-          duration: 5000,
-          closable: true,
-        });
+        toast.error("Insufficient Balance");
         return;
       }
 
@@ -102,7 +77,7 @@ const WithdrawForm = () => {
         ? selectedUser.account.authority
         : getAssociatedTokenAddressSync(mint, selectedUser.account.authority);
 
-      const txSig = await driftClient.withdraw(
+      await driftClient.withdraw(
         transferAmount,
         spotMarketAccount.marketIndex,
         destinationAccount,
@@ -110,31 +85,12 @@ const WithdrawForm = () => {
         selectedUser.account.subAccountId,
       );
 
-      toaster.create({
-        title: "Withdrawal Submitted",
-        type: "success",
-        duration: 9000,
-        closable: true,
-        description: (
-          <Box>
-            Transaction sent successfully.{" "}
-            <Link href={`${solscanBaseUrl}/${txSig}`} color="teal.500" fontWeight="bold">
-              View on Solscan
-            </Link>
-          </Box>
-        ),
-      });
+      toast.success("Withdrawal Submitted");
       setAmountStr("0");
 
     } catch (error) {
       console.error("Withdrawal failed:", error);
-      toaster.create({
-        title: "Withdrawal Failed",
-        description: (error as Error)?.message || "An unknown error occurred.",
-        type: "error",
-        duration: 9000,
-        closable: true,
-      });
+      toast.error("Withdrawal Failed");
     }
   };
 

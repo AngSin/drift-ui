@@ -1,17 +1,18 @@
 "use client";
 import {Box, Button, Checkbox, Input} from "@chakra-ui/react";
-import { toaster } from "@/components/ui/toaster";
 import {
   BASE_PRECISION,
   BN,
-  DriftClient, OrderTriggerCondition,
+  DriftClient,
+  OrderTriggerCondition,
   OrderType,
   PerpMarketAccount,
   PositionDirection
 } from "@drift-labs/sdk-browser";
 import {useEffect, useState} from "react";
 import AssetSelect from "@/app/AssetSelect";
-import {capitalize, formatBigNum, getMarketSymbol} from "@/utils/strings";
+import {capitalize, formatBigNum} from "@/utils/strings";
+import {toast} from "react-toastify";
 
 type TradingFormProps = {
   orderType: OrderType;
@@ -39,7 +40,6 @@ const TradingForm = ({ orderType, direction, driftClient }: TradingFormProps) =>
       const baseAssetAmount = driftClient.convertToPerpPrecision(Number(size));
       const marketIndex = perpMarketAccount.marketIndex;
 
-      // === Main order ===
       await driftClient.placePerpOrder({
         orderType,
         marketIndex,
@@ -50,7 +50,6 @@ const TradingForm = ({ orderType, direction, driftClient }: TradingFormProps) =>
           : undefined,
       });
 
-      // === Take Profit ===
       if (tpPrice) {
         await driftClient.placePerpOrder({
           orderType: OrderType.TRIGGER_MARKET,
@@ -63,7 +62,6 @@ const TradingForm = ({ orderType, direction, driftClient }: TradingFormProps) =>
         });
       }
 
-      // === Stop Loss ===
       if (slPrice) {
         await driftClient.placePerpOrder({
           orderType: OrderType.TRIGGER_MARKET,
@@ -76,23 +74,11 @@ const TradingForm = ({ orderType, direction, driftClient }: TradingFormProps) =>
         });
       }
 
-      toaster.create({
-        title: "Order placed successfully",
-        description: `Order to ${Object.keys(direction)[0].toUpperCase()} ${getMarketSymbol(perpMarketAccount?.marketIndex)}`,
-        type: "success",
-        duration: 5000,
-        closable: true,
-      });
+      toast.success("Order placed successfully");
 
     } catch (error) {
       console.error(error);
-      toaster.create({
-        title: "Failed to place order",
-        description: (error as Error)?.message,
-        type: "error",
-        duration: 5000,
-        closable: true,
-      });
+      toast.error("Failed to place order");
     }
   };
 

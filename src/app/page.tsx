@@ -2,7 +2,7 @@
 import PositionsPanel from "@/app/PositionsPanel";
 import useDriftStore from "@/store/driftStore";
 import TradingPanel from "@/app/TradingPanel";
-import { Box } from "@chakra-ui/react";
+import {Box} from "@chakra-ui/react";
 
 export default function Home() {
   const { selectedUser, driftClient } = useDriftStore();

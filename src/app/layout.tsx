@@ -3,7 +3,7 @@ import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 import Providers from '@/providers/index';
 import Navbar from "@/app/Navbar";
-import {Toaster} from "@/components/ui/toaster";
+import {Bounce, ToastContainer} from "react-toastify";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +33,19 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           {children}
-          <Toaster />
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={true}
+            closeOnClick={true}
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+            transition={Bounce}
+          />
         </Providers>
       </body>
     </html>
