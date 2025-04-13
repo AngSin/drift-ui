@@ -1,29 +1,42 @@
-'use client';
+"use client";
 
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {Alert, Box, Button, createListCollection, Heading, Input, Select, Spinner, Stack, Text} from '@chakra-ui/react';
-import {Keypair, PublicKey} from '@solana/web3.js';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  createListCollection,
+  Heading,
+  Input,
+  Select,
+  Spinner,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import {
   BulkAccountLoader,
   DriftClient,
   initialize,
   User as DriftUserInternal,
-} from '@drift-labs/sdk-browser';
-import {Wallet} from '@coral-xyz/anchor';
-import {connection, SLOW_POLLING_INTERVAL} from '@/utils/constants';
-import {WalletAdapterNetwork} from "@solana/wallet-adapter-base";
-import {User} from "@/store/driftStore";
+} from "@drift-labs/sdk-browser";
+import { Wallet } from "@coral-xyz/anchor";
+import { connection, SLOW_POLLING_INTERVAL } from "@/utils/constants";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { User } from "@/store/driftStore";
 import PositionsPanel from "@/app/PositionsPanel";
 
 const dummyKeypair = Keypair.generate();
 
 const ExplorePage = () => {
-  const [inputAddress, setInputAddress] = useState('');
+  const [inputAddress, setInputAddress] = useState("");
   const [targetAddress, setTargetAddress] = useState<PublicKey | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exploreUsers, setExploreUsers] = useState<User[]>([]);
-  const [selectedExploreUser, setSelectedExploreUser] = useState<User | null>(null);
+  const [selectedExploreUser, setSelectedExploreUser] = useState<User | null>(
+    null,
+  );
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
   const bulkAccountLoaderRef = useRef<BulkAccountLoader | null>(null);
@@ -32,10 +45,14 @@ const ExplorePage = () => {
   const eventListenersRef = useRef<{ off: () => void }[]>([]);
 
   const cleanupSubscriptions = useCallback(() => {
-    eventListenersRef.current.forEach(listener => listener.off());
+    eventListenersRef.current.forEach((listener) => listener.off());
     eventListenersRef.current = [];
-    userRefs.current.forEach(user => {
-      user.unsubscribe().catch(e => console.error("Error unsubscribing explore DriftUser:", e));
+    userRefs.current.forEach((user) => {
+      user
+        .unsubscribe()
+        .catch((e) =>
+          console.error("Error unsubscribing explore DriftUser:", e),
+        );
     });
     userRefs.current = [];
     if (bulkAccountLoaderRef.current) {
@@ -71,14 +88,18 @@ const ExplorePage = () => {
       setTargetAddress(publicKey);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_) {
-      setError('Invalid Solana address provided.');
+      setError("Invalid Solana address provided.");
       setIsLoading(false);
       return;
     }
 
     try {
       const sdkConfig = initialize({ env: WalletAdapterNetwork.Mainnet });
-      const loader = new BulkAccountLoader(connection, 'confirmed', SLOW_POLLING_INTERVAL);
+      const loader = new BulkAccountLoader(
+        connection,
+        "confirmed",
+        SLOW_POLLING_INTERVAL,
+      );
       bulkAccountLoaderRef.current = loader;
 
       const dummyWallet: Wallet = {
@@ -92,61 +113,81 @@ const ExplorePage = () => {
         connection,
         wallet: dummyWallet,
         programID: new PublicKey(sdkConfig.DRIFT_PROGRAM_ID),
-        accountSubscription: { type: 'polling', accountLoader: loader },
-        opts: { commitment: 'confirmed' }
+        accountSubscription: { type: "polling", accountLoader: loader },
+        opts: { commitment: "confirmed" },
       });
       await client.subscribe();
       driftClientRef.current = client;
 
       const clientEmitter = client.eventEmitter;
-      if (clientEmitter && typeof clientEmitter.on === 'function') {
-        clientEmitter.on('update', handleSdkUpdate);
-        eventListenersRef.current.push({ off: () => clientEmitter.off('update', handleSdkUpdate) });
+      if (clientEmitter && typeof clientEmitter.on === "function") {
+        clientEmitter.on("update", handleSdkUpdate);
+        eventListenersRef.current.push({
+          off: () => clientEmitter.off("update", handleSdkUpdate),
+        });
       }
 
       const userAccounts = await client.getUserAccountsForAuthority(publicKey);
 
       if (userAccounts.length === 0) {
-        setError(`No Drift subaccounts found for wallet ${publicKey.toBase58()}`);
+        setError(
+          `No Drift subaccounts found for wallet ${publicKey.toBase58()}`,
+        );
         setIsLoading(false);
         return;
       }
 
-      const usersPromises = userAccounts.filter(account => !!account).map(async (account) => {
-        const userAccountPublicKey = await client.getUserAccountPublicKey(account.subAccountId, publicKey);
+      const usersPromises = userAccounts
+        .filter((account) => !!account)
+        .map(async (account) => {
+          const userAccountPublicKey = await client.getUserAccountPublicKey(
+            account.subAccountId,
+            publicKey,
+          );
 
-        const driftUser = new DriftUserInternal({
-          driftClient: client,
-          userAccountPublicKey: userAccountPublicKey,
-          accountSubscription: {
-            type: 'polling',
-            accountLoader: loader,
-          },
+          const driftUser = new DriftUserInternal({
+            driftClient: client,
+            userAccountPublicKey: userAccountPublicKey,
+            accountSubscription: {
+              type: "polling",
+              accountLoader: loader,
+            },
+          });
+
+          const userEmitter = driftUser.eventEmitter;
+          if (userEmitter && typeof userEmitter.on === "function") {
+            userEmitter.on("update", handleSdkUpdate);
+            eventListenersRef.current.push({
+              off: () => userEmitter.off("update", handleSdkUpdate),
+            });
+          }
+
+          try {
+            await driftUser.subscribe();
+            console.log(
+              `Subscribed to DriftUser for subAcc ${account.subAccountId}`,
+            );
+            userRefs.current.push(driftUser);
+            return { driftUser, account };
+          } catch (subscribeError) {
+            console.error(
+              `Failed to subscribe DriftUser for subAcc ${account.subAccountId} at ${userAccountPublicKey.toBase58()}:`,
+              subscribeError,
+            );
+            return null;
+          }
         });
 
-        const userEmitter = driftUser.eventEmitter;
-        if (userEmitter && typeof userEmitter.on === 'function') {
-          userEmitter.on('update', handleSdkUpdate);
-          eventListenersRef.current.push({ off: () => userEmitter.off('update', handleSdkUpdate) });
-        }
-
-        try {
-          await driftUser.subscribe();
-          console.log(`Subscribed to DriftUser for subAcc ${account.subAccountId}`);
-          userRefs.current.push(driftUser);
-          return { driftUser, account };
-        } catch (subscribeError) {
-          console.error(`Failed to subscribe DriftUser for subAcc ${account.subAccountId} at ${userAccountPublicKey.toBase58()}:`, subscribeError);
-          return null;
-        }
-      });
-
       const loadedUsersResults = await Promise.all(usersPromises);
-      const loadedUsers = loadedUsersResults.filter(user => user !== null) as User[];
+      const loadedUsers = loadedUsersResults.filter(
+        (user) => user !== null,
+      ) as User[];
 
       if (loadedUsers.length === 0 && userAccounts.length > 0) {
         console.error("All DriftUser subscriptions failed.");
-        setError(`Failed to subscribe to any subaccounts for wallet ${publicKey.toBase58()}. Check RPC or program state.`);
+        setError(
+          `Failed to subscribe to any subaccounts for wallet ${publicKey.toBase58()}. Check RPC or program state.`,
+        );
         cleanupSubscriptions();
         setIsLoading(false);
         return;
@@ -156,34 +197,64 @@ const ExplorePage = () => {
       setSelectedExploreUser(loadedUsers[0] || null);
       setLastUpdatedAt(new Date());
       setIsLoading(false);
-
     } catch (err) {
       console.error("Error loading wallet data:", err);
-      setError(`Failed to load data: ${(err as Error)?.message || 'Unknown error'}`);
+      setError(
+        `Failed to load data: ${(err as Error)?.message || "Unknown error"}`,
+      );
       cleanupSubscriptions();
     } finally {
       setIsLoading(false);
     }
   }, [inputAddress, cleanupSubscriptions, handleSdkUpdate]);
 
-
   const userSubAccountCollection = createListCollection({
-    items: exploreUsers.filter(u => u.account).map(user => ({
-      ...user,
-      key: user.account.subAccountId.toString(),
-      value: Buffer.from(user.account.name).toString(),
-    }))
+    items: exploreUsers
+      .filter((u) => u.account)
+      .map((user) => ({
+        ...user,
+        key: user.account.subAccountId.toString(),
+        value: Buffer.from(user.account.name).toString(),
+      })),
   });
 
   return (
     <Box p={10} m={2} borderWidth={1} borderRadius="lg">
-      <Stack gap="4" direction="column" wrap="wrap" marginTop={2} align="stretch">
+      <Stack
+        gap="4"
+        direction="column"
+        wrap="wrap"
+        marginTop={2}
+        align="stretch"
+      >
         <Heading size="lg">Explore Wallet</Heading>
-        <Text>Enter a Solana wallet address to view its Drift subaccounts and positions (read-only).</Text>
+        <Text>
+          Enter a Solana wallet address to view its Drift subaccounts and
+          positions (read-only).
+        </Text>
         <Box>
-          <Text as="label" mb={1} display="block" fontWeight="medium">Wallet Address</Text>
-          <Input id="walletAddress" placeholder="Enter Solana wallet address (e.g., So11...)" value={inputAddress} onChange={(e) => { setInputAddress(e.target.value); if (error) setError(null); if (e.target.value === '') { cleanupSubscriptions(); setTargetAddress(null); } }} disabled={isLoading}/>
-          {error && !isLoading && (<Text color="red.500" fontSize="sm" mt={1}>{error}</Text>)}
+          <Text as="label" mb={1} display="block" fontWeight="medium">
+            Wallet Address
+          </Text>
+          <Input
+            id="walletAddress"
+            placeholder="Enter Solana wallet address (e.g., So11...)"
+            value={inputAddress}
+            onChange={(e) => {
+              setInputAddress(e.target.value);
+              if (error) setError(null);
+              if (e.target.value === "") {
+                cleanupSubscriptions();
+                setTargetAddress(null);
+              }
+            }}
+            disabled={isLoading}
+          />
+          {error && !isLoading && (
+            <Text color="red.500" fontSize="sm" mt={1}>
+              {error}
+            </Text>
+          )}
         </Box>
 
         <Button
@@ -192,40 +263,71 @@ const ExplorePage = () => {
           disabled={!inputAddress || isLoading}
           colorScheme="teal"
         >
-          {isLoading ? 'Loading...' : 'Load Wallet Data'}
+          {isLoading ? "Loading..." : "Load Wallet Data"}
         </Button>
 
-        {isLoading && <Box display="flex" alignItems="center"><Spinner size="sm" mr={2}/>Loading data...</Box>}
+        {isLoading && (
+          <Box display="flex" alignItems="center">
+            <Spinner size="sm" mr={2} />
+            Loading data...
+          </Box>
+        )}
 
         {targetAddress && !isLoading && exploreUsers.length > 0 && (
           <Box w="full">
-            <Heading size="md" mt={4} mb={2}>Viewing: {targetAddress.toBase58()}</Heading>
+            <Heading size="md" mt={4} mb={2}>
+              Viewing: {targetAddress.toBase58()}
+            </Heading>
             <Select.Root collection={userSubAccountCollection}>
               <Select.Label>Select Subaccount:</Select.Label>
-              <Select.Control><Select.Trigger><Select.ValueText placeholder={Buffer.from(selectedExploreUser?.account.name || []).toString()} /></Select.Trigger></Select.Control>
-              <Select.Positioner><Select.Content>
-                {userSubAccountCollection.items.map((item) => (
-                  <Select.Item key={item.key} item={item} onClick={() => setSelectedExploreUser(item)}>{item.value}<Select.ItemIndicator /></Select.Item>
-                ))}
-              </Select.Content></Select.Positioner>
+              <Select.Control>
+                <Select.Trigger>
+                  <Select.ValueText
+                    placeholder={Buffer.from(
+                      selectedExploreUser?.account.name || [],
+                    ).toString()}
+                  />
+                </Select.Trigger>
+              </Select.Control>
+              <Select.Positioner>
+                <Select.Content>
+                  {userSubAccountCollection.items.map((item) => (
+                    <Select.Item
+                      key={item.key}
+                      item={item}
+                      onClick={() => setSelectedExploreUser(item)}
+                    >
+                      {item.value}
+                      <Select.ItemIndicator />
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Positioner>
             </Select.Root>
 
             {selectedExploreUser ? (
               <>
-                <Text fontSize="xs" color="gray.500" mt={2}>Last updated: {lastUpdatedAt?.toLocaleTimeString() ?? 'N/A'}</Text>
+                <Text fontSize="xs" color="gray.500" mt={2}>
+                  Last updated: {lastUpdatedAt?.toLocaleTimeString() ?? "N/A"}
+                </Text>
               </>
             ) : (
-              exploreUsers.length > 0 && <Text>Please select a subaccount.</Text>
+              exploreUsers.length > 0 && (
+                <Text>Please select a subaccount.</Text>
+              )
             )}
           </Box>
         )}
 
         {selectedExploreUser && driftClientRef.current && (
-          <PositionsPanel selectedUser={selectedExploreUser} driftClient={driftClientRef.current} />
+          <PositionsPanel
+            selectedUser={selectedExploreUser}
+            driftClient={driftClientRef.current}
+          />
         )}
 
         {targetAddress && !isLoading && exploreUsers.length === 0 && error && (
-          <Alert.Root status='info' mt={4}>
+          <Alert.Root status="info" mt={4}>
             <Alert.Content>
               <Alert.Title>{error}</Alert.Title>
             </Alert.Content>

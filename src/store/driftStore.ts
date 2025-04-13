@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import {create} from 'zustand';
-import {WalletAdapterNetwork} from '@solana/wallet-adapter-base';
-import {PublicKey} from '@solana/web3.js';
-import {AnchorWallet} from "@solana/wallet-adapter-react";
+import { create } from "zustand";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { PublicKey } from "@solana/web3.js";
+import { AnchorWallet } from "@solana/wallet-adapter-react";
 import {
   BulkAccountLoader,
   DriftClient,
@@ -11,8 +11,8 @@ import {
   User as DriftUser,
   UserAccount,
 } from "@drift-labs/sdk-browser";
-import {connection, FAST_POLLING_INTERVAL} from "@/utils/constants";
-import {EventEmitter} from 'events';
+import { connection, FAST_POLLING_INTERVAL } from "@/utils/constants";
+import { EventEmitter } from "events";
 
 export type User = {
   driftUser: DriftUser;
@@ -50,46 +50,58 @@ const useDriftStore = create<DriftState>((set, get) => {
 
       const sdkConfig = initialize({ env: WalletAdapterNetwork.Mainnet });
 
-      const bulkAccountLoader = new BulkAccountLoader(connection, 'confirmed', FAST_POLLING_INTERVAL);
+      const bulkAccountLoader = new BulkAccountLoader(
+        connection,
+        "confirmed",
+        FAST_POLLING_INTERVAL,
+      );
 
       const driftClient = new DriftClient({
         connection,
         wallet,
         programID: new PublicKey(sdkConfig.DRIFT_PROGRAM_ID),
         accountSubscription: {
-          type: 'polling',
+          type: "polling",
           accountLoader: bulkAccountLoader,
         },
       });
 
-      driftClient.eventEmitter.on('update', handleSdkUpdate);
+      driftClient.eventEmitter.on("update", handleSdkUpdate);
 
       await driftClient.subscribe();
 
-      const userAccounts = await driftClient.getUserAccountsForAuthority(wallet.publicKey);
+      const userAccounts = await driftClient.getUserAccountsForAuthority(
+        wallet.publicKey,
+      );
 
       const users = await Promise.all(
-        userAccounts.filter(account => !!account).map(async (account) => {
-          const userAccountPublicKey = await driftClient.getUserAccountPublicKey(account.subAccountId, wallet.publicKey);
+        userAccounts
+          .filter((account) => !!account)
+          .map(async (account) => {
+            const userAccountPublicKey =
+              await driftClient.getUserAccountPublicKey(
+                account.subAccountId,
+                wallet.publicKey,
+              );
 
-          const driftUser = new DriftUser({
-            driftClient,
-            userAccountPublicKey,
-            accountSubscription: {
-              type: 'polling',
-              accountLoader: bulkAccountLoader,
-            }
-          });
+            const driftUser = new DriftUser({
+              driftClient,
+              userAccountPublicKey,
+              accountSubscription: {
+                type: "polling",
+                accountLoader: bulkAccountLoader,
+              },
+            });
 
-          driftUser.eventEmitter.on('update', handleSdkUpdate);
+            driftUser.eventEmitter.on("update", handleSdkUpdate);
 
-          await driftUser.subscribe();
+            await driftUser.subscribe();
 
-          return {
-            driftUser,
-            account,
-          };
-        })
+            return {
+              driftUser,
+              account,
+            };
+          }),
       );
 
       set({
@@ -106,16 +118,26 @@ const useDriftStore = create<DriftState>((set, get) => {
       const state = get();
 
       if (state.driftClient) {
-        (state.driftClient.eventEmitter as EventEmitter)?.off('update', handleSdkUpdate);
+        (state.driftClient.eventEmitter as EventEmitter)?.off(
+          "update",
+          handleSdkUpdate,
+        );
       }
-      state.users.forEach(user => {
-        (user.driftUser.eventEmitter as EventEmitter)?.off('update', handleSdkUpdate);
+      state.users.forEach((user) => {
+        (user.driftUser.eventEmitter as EventEmitter)?.off(
+          "update",
+          handleSdkUpdate,
+        );
       });
 
-      state.users.forEach(user => {
-        user.driftUser.unsubscribe().catch(e => console.error("Error unsubscribing DriftUser:", e));
+      state.users.forEach((user) => {
+        user.driftUser
+          .unsubscribe()
+          .catch((e) => console.error("Error unsubscribing DriftUser:", e));
       });
-      state.driftClient?.unsubscribe().catch(e => console.error("Error unsubscribing DriftClient:", e));
+      state.driftClient
+        ?.unsubscribe()
+        .catch((e) => console.error("Error unsubscribing DriftClient:", e));
 
       state.bulkAccountLoader?.stopPolling();
 
@@ -131,7 +153,9 @@ const useDriftStore = create<DriftState>((set, get) => {
 
     selectUser: async (subAccountId: number) => {
       const state = get();
-      const selectedUser = state.users.find((u) => u.account.subAccountId === subAccountId);
+      const selectedUser = state.users.find(
+        (u) => u.account.subAccountId === subAccountId,
+      );
       if (!selectedUser || selectedUser === state.selectedUser) return; // Avoid unnecessary updates
 
       set({ selectedUser });

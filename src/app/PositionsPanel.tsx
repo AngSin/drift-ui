@@ -1,17 +1,19 @@
 "use client";
-import {User} from "@/store/driftStore";
-import {Table, Tabs} from "@chakra-ui/react";
-import {formatBigNum, getMarketSymbol} from "@/utils/strings";
-import {DriftClient} from "@drift-labs/sdk-browser";
+import { User } from "@/store/driftStore";
+import { Table, Tabs } from "@chakra-ui/react";
+import { formatBigNum, getMarketSymbol } from "@/utils/strings";
+import { DriftClient } from "@drift-labs/sdk-browser";
 import OrdersTable from "@/OrdersTable";
 
 type PositionsPanelProps = {
-  selectedUser: User,
-  driftClient: DriftClient,
+  selectedUser: User;
+  driftClient: DriftClient;
 };
 
 const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
-  const positions = selectedUser.driftUser.getActivePerpPositions().filter(position => position.baseAssetAmount.toString() !== '0');
+  const positions = selectedUser.driftUser
+    .getActivePerpPositions()
+    .filter((position) => position.baseAssetAmount.toString() !== "0");
   const orders = selectedUser.driftUser.getOpenOrders();
 
   return (
@@ -21,9 +23,7 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
           <Tabs.Trigger value="positions">
             Positions ({positions.length})
           </Tabs.Trigger>
-          <Tabs.Trigger value="orders">
-            Orders ({orders.length})
-          </Tabs.Trigger>
+          <Tabs.Trigger value="orders">Orders ({orders.length})</Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="positions">
           <Table.Root>
@@ -37,19 +37,40 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {driftClient && positions?.map((position, index) => {
-                return (
-                  <Table.Row key={index}>
-                    <Table.Cell>
-                      {getMarketSymbol(position.marketIndex)}
-                    </Table.Cell>
-                    <Table.Cell>{position.baseAssetAmount.isNeg() ? 'SHORT' : 'LONG'}</Table.Cell>
-                    <Table.Cell>{formatBigNum(position.baseAssetAmount.abs(), 9)}</Table.Cell>
-                    <Table.Cell>${formatBigNum(driftClient.getUser().getUnrealizedPNL(true, position.marketIndex),  6)}</Table.Cell>
-                    <Table.Cell>${formatBigNum(driftClient.getOracleDataForPerpMarket(position.marketIndex).price, 6)}</Table.Cell>
-                  </Table.Row>
-                )
-              })}
+              {driftClient &&
+                positions?.map((position, index) => {
+                  return (
+                    <Table.Row key={index}>
+                      <Table.Cell>
+                        {getMarketSymbol(position.marketIndex)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {position.baseAssetAmount.isNeg() ? "SHORT" : "LONG"}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {formatBigNum(position.baseAssetAmount.abs(), 9)}
+                      </Table.Cell>
+                      <Table.Cell>
+                        $
+                        {formatBigNum(
+                          driftClient
+                            .getUser()
+                            .getUnrealizedPNL(true, position.marketIndex),
+                          6,
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        $
+                        {formatBigNum(
+                          driftClient.getOracleDataForPerpMarket(
+                            position.marketIndex,
+                          ).price,
+                          6,
+                        )}
+                      </Table.Cell>
+                    </Table.Row>
+                  );
+                })}
             </Table.Body>
           </Table.Root>
         </Tabs.Content>
@@ -58,7 +79,7 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
         </Tabs.Content>
       </Tabs.Root>
     </div>
-  )
+  );
 };
 
 export default PositionsPanel;

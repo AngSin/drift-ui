@@ -1,5 +1,5 @@
 "use client";
-import {Button, CloseButton, Dialog, Tabs} from "@chakra-ui/react"
+import { Button, CloseButton, Dialog, Tabs } from "@chakra-ui/react";
 import DepositForm from "./DepositForm";
 import WithdrawForm from "@/app/WithdrawForm";
 
@@ -19,12 +19,8 @@ const TransferDialog = () => {
           </Dialog.Header>
           <Tabs.Root defaultValue="deposit">
             <Tabs.List>
-              <Tabs.Trigger value="deposit">
-                Deposit
-              </Tabs.Trigger>
-              <Tabs.Trigger value="withdraw">
-                Withdraw
-              </Tabs.Trigger>
+              <Tabs.Trigger value="deposit">Deposit</Tabs.Trigger>
+              <Tabs.Trigger value="withdraw">Withdraw</Tabs.Trigger>
             </Tabs.List>
             <Tabs.Content value="deposit">
               <DepositForm />

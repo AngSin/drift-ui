@@ -1,8 +1,8 @@
 "use client";
-import {useWallet} from '@solana/wallet-adapter-react';
-import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import AccountsDrawer from "@/app/AccountsDrawer";
-import {Box, Link} from "@chakra-ui/react";
+import { Box, Link } from "@chakra-ui/react";
 
 const Navbar = () => {
   const { connected, connecting, publicKey: userPubKey } = useWallet();
@@ -22,14 +22,8 @@ const Navbar = () => {
             </span>
           ) : (
             <span className="flex items-center gap-2">
-                  {connecting ? (
-                    'Connecting...'
-                  ) : (
-                    <>
-                      Connect Wallet
-                    </>
-                  )}
-                </span>
+              {connecting ? "Connecting..." : <>Connect Wallet</>}
+            </span>
           )}
         </WalletMultiButton>
         <AccountsDrawer />

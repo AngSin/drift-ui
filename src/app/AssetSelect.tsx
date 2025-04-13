@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import {createListCollection, Select} from "@chakra-ui/react"
-import {PerpMarketAccount, SpotMarketAccount} from "@drift-labs/sdk-browser";
+import { createListCollection, Select } from "@chakra-ui/react";
+import { PerpMarketAccount, SpotMarketAccount } from "@drift-labs/sdk-browser";
 
 type MarketAccount = SpotMarketAccount | PerpMarketAccount;
 
@@ -14,13 +14,13 @@ type AssetSelectProps<T extends MarketAccount> = {
 const AssetSelect = <T extends MarketAccount>({
   selectedMarketAccount,
   setMarketAccount,
-  marketAccounts
+  marketAccounts,
 }: AssetSelectProps<T>) => {
   const assetCollection = createListCollection({
-    items: marketAccounts.map(asset => ({
+    items: marketAccounts.map((asset) => ({
       ...asset,
       key: asset.marketIndex,
-      value: Buffer.from(asset.name).toString()
+      value: Buffer.from(asset.name).toString(),
     })),
   });
 
@@ -30,16 +30,20 @@ const AssetSelect = <T extends MarketAccount>({
       collection={assetCollection}
       size="md"
       width="320px"
-      value={selectedMarketAccount ? [selectedMarketAccount.marketIndex.toString()] : []}
+      value={
+        selectedMarketAccount
+          ? [selectedMarketAccount.marketIndex.toString()]
+          : []
+      }
     >
       <Select.Control>
         <Select.Trigger>
           <Select.ValueText>
-            {
-              assetCollection.items.find(i =>
-                i.key.toString() === selectedMarketAccount?.marketIndex.toString()
-              )?.value || 'Select Asset'
-            }
+            {assetCollection.items.find(
+              (i) =>
+                i.key.toString() ===
+                selectedMarketAccount?.marketIndex.toString(),
+            )?.value || "Select Asset"}
           </Select.ValueText>
         </Select.Trigger>
         <Select.IndicatorGroup>
@@ -55,13 +59,15 @@ const AssetSelect = <T extends MarketAccount>({
               onClick={() => setMarketAccount(asset)}
             >
               {asset.value}
-              {selectedMarketAccount?.marketIndex === asset.key && <Select.ItemIndicator />}
+              {selectedMarketAccount?.marketIndex === asset.key && (
+                <Select.ItemIndicator />
+              )}
             </Select.Item>
           ))}
         </Select.Content>
       </Select.Positioner>
     </Select.Root>
-  )
+  );
 };
 
 export default AssetSelect;

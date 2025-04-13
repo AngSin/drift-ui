@@ -1,20 +1,29 @@
 "use client";
-import {Button, CloseButton, Drawer, Portal, Card, Stack} from "@chakra-ui/react";
+import {
+  Button,
+  CloseButton,
+  Drawer,
+  Portal,
+  Card,
+  Stack,
+} from "@chakra-ui/react";
 import useDriftStore from "@/store/driftStore";
-import {shortenAddress} from "@/utils/strings";
-import {convertToNumber, QUOTE_PRECISION} from "@drift-labs/sdk-browser";
-import {useEffect, useState} from "react";
-import {connection} from "@/utils/constants";
-import {LAMPORTS_PER_SOL} from "@solana/web3.js";
+import { shortenAddress } from "@/utils/strings";
+import { convertToNumber, QUOTE_PRECISION } from "@drift-labs/sdk-browser";
+import { useEffect, useState } from "react";
+import { connection } from "@/utils/constants";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import TransferDialog from "@/app/TransferDialog";
 
 const AccountsDrawer = () => {
-  const [walletBalance, setWalletBalance] = useState<string>('0.0');
+  const [walletBalance, setWalletBalance] = useState<string>("0.0");
   const { selectedUser, users, selectUser } = useDriftStore();
   const fetchBalance = async () => {
     if (selectedUser) {
-      const lamports = await connection.getBalance(selectedUser.account.authority);
-      const solBalance = (lamports/LAMPORTS_PER_SOL).toFixed(2);
+      const lamports = await connection.getBalance(
+        selectedUser.account.authority,
+      );
+      const solBalance = (lamports / LAMPORTS_PER_SOL).toFixed(2);
       setWalletBalance(solBalance);
     }
   };
@@ -26,7 +35,6 @@ const AccountsDrawer = () => {
   if (!selectedUser) {
     return null;
   }
-
 
   return (
     <Drawer.Root>
@@ -41,16 +49,23 @@ const AccountsDrawer = () => {
           <Drawer.Content>
             <br />
             <Drawer.Header>
-              <Drawer.Title>{Buffer.from(selectedUser.account.name).toString()}</Drawer.Title>
-              <Drawer.Description>{shortenAddress(selectedUser.driftUser.getUserAccountPublicKey().toString())}</Drawer.Description>
+              <Drawer.Title>
+                {Buffer.from(selectedUser.account.name).toString()}
+              </Drawer.Title>
+              <Drawer.Description>
+                {shortenAddress(
+                  selectedUser.driftUser.getUserAccountPublicKey().toString(),
+                )}
+              </Drawer.Description>
             </Drawer.Header>
             <Drawer.Body>
               <div className="flex justify-between">
                 <div>
                   <div>
-                    ${convertToNumber(
+                    $
+                    {convertToNumber(
                       selectedUser.driftUser.getTotalAssetValue(),
-                      QUOTE_PRECISION
+                      QUOTE_PRECISION,
                     ).toFixed(2)}
                   </div>
                   <div>Subacct. Value</div>
@@ -69,10 +84,25 @@ const AccountsDrawer = () => {
                     onClick={() => selectUser(user.account.subAccountId)}
                   >
                     <Card.Body>
-                      <Card.Title>{Buffer.from(user.account.name).toString()}</Card.Title>
-                      <Card.Description>Sub Account ID: {user.account.subAccountId}</Card.Description>
-                      <Card.Description>Sub Account Address: {shortenAddress(user.driftUser.getUserAccountPublicKey().toString())}</Card.Description>
-                      <Card.Description>${(convertToNumber(user.driftUser.getTotalAssetValue(), QUOTE_PRECISION)).toFixed(2)}</Card.Description>
+                      <Card.Title>
+                        {Buffer.from(user.account.name).toString()}
+                      </Card.Title>
+                      <Card.Description>
+                        Sub Account ID: {user.account.subAccountId}
+                      </Card.Description>
+                      <Card.Description>
+                        Sub Account Address:{" "}
+                        {shortenAddress(
+                          user.driftUser.getUserAccountPublicKey().toString(),
+                        )}
+                      </Card.Description>
+                      <Card.Description>
+                        $
+                        {convertToNumber(
+                          user.driftUser.getTotalAssetValue(),
+                          QUOTE_PRECISION,
+                        ).toFixed(2)}
+                      </Card.Description>
                     </Card.Body>
                   </Card.Root>
                 ))}

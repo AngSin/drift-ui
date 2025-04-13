@@ -1,6 +1,6 @@
 "use client";
-import {OrderType, PositionDirection} from "@drift-labs/sdk-browser";
-import {Tabs} from "@chakra-ui/react";
+import { OrderType, PositionDirection } from "@drift-labs/sdk-browser";
+import { Tabs } from "@chakra-ui/react";
 import TradingForm from "@/app/TradingForm";
 import useDriftStore from "@/store/driftStore";
 

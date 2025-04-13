@@ -1,27 +1,35 @@
-'use client';
+"use client";
 
 import { Box, Button, Dialog, Input, Text } from "@chakra-ui/react";
 import UserAccountSelect from "@/app/UserAccountSelect";
 import AssetSelect from "@/app/AssetSelect";
-import { SpotMarketAccount, WRAPPED_SOL_MINT, ZERO, BN } from "@drift-labs/sdk-browser";
+import {
+  SpotMarketAccount,
+  WRAPPED_SOL_MINT,
+  ZERO,
+  BN,
+} from "@drift-labs/sdk-browser";
 import { useState, useEffect, useMemo } from "react";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
 import { decimalStrToBN, formatBigNum } from "@/utils/strings";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 const DepositForm = () => {
   const [amountStr, setAmountStr] = useState<string>("0");
-  const [spotMarketAccount, setSpotMarketAccount] = useState<SpotMarketAccount>();
+  const [spotMarketAccount, setSpotMarketAccount] =
+    useState<SpotMarketAccount>();
   const { driftClient, selectedUser } = useDriftStore();
-  const [walletBalanceBn, setWalletBalanceBn] = useState<BN | undefined>(undefined);
+  const [walletBalanceBn, setWalletBalanceBn] = useState<BN | undefined>(
+    undefined,
+  );
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.currentTarget.value;
     if (!/^\d*\.?\d*$/.test(value)) {
       return;
     }
-    if (value.length > 1 && value.startsWith('0') && !value.startsWith('0.')) {
+    if (value.length > 1 && value.startsWith("0") && !value.startsWith("0.")) {
       value = value.substring(1);
     }
     if (value === "" || value === ".") {
@@ -31,7 +39,11 @@ const DepositForm = () => {
   };
 
   useEffect(() => {
-    if (!driftClient?.connection || !selectedUser?.account.authority || !spotMarketAccount) {
+    if (
+      !driftClient?.connection ||
+      !selectedUser?.account.authority ||
+      !spotMarketAccount
+    ) {
       setWalletBalanceBn(undefined);
       return;
     }
@@ -50,14 +62,18 @@ const DepositForm = () => {
         } else {
           const ata = getAssociatedTokenAddressSync(mint, authority);
           try {
-            const tokenAccountInfo = await connection.getTokenAccountBalance(ata);
+            const tokenAccountInfo =
+              await connection.getTokenAccountBalance(ata);
             if (tokenAccountInfo?.value?.amount) {
               setWalletBalanceBn(new BN(tokenAccountInfo.value.amount));
             } else {
               setWalletBalanceBn(ZERO);
             }
           } catch (error) {
-            console.log(`ATA ${ata.toBase58()} for mint ${mint.toBase58()} not found or error fetching balance:`, error);
+            console.log(
+              `ATA ${ata.toBase58()} for mint ${mint.toBase58()} not found or error fetching balance:`,
+              error,
+            );
             setWalletBalanceBn(ZERO);
           }
         }
@@ -68,9 +84,7 @@ const DepositForm = () => {
     };
 
     fetchBalance();
-
   }, [driftClient, selectedUser, spotMarketAccount]);
-
 
   const formattedWalletBalance = useMemo(() => {
     return formatBigNum(walletBalanceBn, spotMarketAccount?.decimals ?? 0);
@@ -78,7 +92,7 @@ const DepositForm = () => {
 
   const deposit = async () => {
     if (!driftClient || !selectedUser || !spotMarketAccount) {
-      toast.error( "Missing Information");
+      toast.error("Missing Information");
       return;
     }
     if (!amountStr || parseFloat(amountStr) <= 0) {
@@ -115,7 +129,6 @@ const DepositForm = () => {
 
       toast.success("Deposit Submitted");
       setAmountStr("0");
-
     } catch (error) {
       console.error("Deposit failed:", error);
       toast.error("Deposit Failed");
@@ -153,7 +166,8 @@ const DepositForm = () => {
         <Box textAlign="right" mt={1} mr={1} height="20px">
           {spotMarketAccount && selectedUser && (
             <Text fontSize="xs" color="gray.500">
-              Wallet Balance: {formattedWalletBalance} {Buffer.from(spotMarketAccount.name).toString()}
+              Wallet Balance: {formattedWalletBalance}{" "}
+              {Buffer.from(spotMarketAccount.name).toString()}
             </Text>
           )}
         </Box>
@@ -162,12 +176,20 @@ const DepositForm = () => {
         <Dialog.ActionTrigger asChild>
           <Button variant="outline">Cancel</Button>
         </Dialog.ActionTrigger>
-        <Button onClick={deposit} disabled={!driftClient || !selectedUser || !spotMarketAccount || parseFloat(amountStr) <= 0}>
+        <Button
+          onClick={deposit}
+          disabled={
+            !driftClient ||
+            !selectedUser ||
+            !spotMarketAccount ||
+            parseFloat(amountStr) <= 0
+          }
+        >
           Deposit
         </Button>
       </Dialog.Footer>
     </>
-  )
+  );
 };
 
 export default DepositForm;

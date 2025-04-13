@@ -1,10 +1,10 @@
-import {Table} from "@chakra-ui/react";
-import {BN, Order} from "@drift-labs/sdk-browser";
-import {formatBigNum, getMarketSymbol} from "@/utils/strings";
+import { Table } from "@chakra-ui/react";
+import { BN, Order } from "@drift-labs/sdk-browser";
+import { formatBigNum, getMarketSymbol } from "@/utils/strings";
 
 type OrdersTableProps = {
   orders: Order[];
-}
+};
 
 const OrdersTable = ({ orders }: OrdersTableProps) => (
   <Table.Root>
@@ -20,14 +20,15 @@ const OrdersTable = ({ orders }: OrdersTableProps) => (
       {orders.map((order, index) => {
         return (
           <Table.Row key={index}>
-            <Table.Cell>
-              {getMarketSymbol(order.marketIndex)}
-            </Table.Cell>
+            <Table.Cell>{getMarketSymbol(order.marketIndex)}</Table.Cell>
             <Table.Cell>{Object.keys(order.orderType)[0]}</Table.Cell>
-            <Table.Cell>{formatBigNum(order.baseAssetAmountFilled, 9)} / {formatBigNum(order.baseAssetAmount, 9)}</Table.Cell>
-            <Table.Cell>{`${order.triggerPrice.eq(new BN(0)) ? '-' : `$${formatBigNum(order.triggerPrice, 6)}`} / ${order.price.eq(new BN(0)) ? '-' : `$${formatBigNum(order.price, 6)}`}`}</Table.Cell>
+            <Table.Cell>
+              {formatBigNum(order.baseAssetAmountFilled, 9)} /{" "}
+              {formatBigNum(order.baseAssetAmount, 9)}
+            </Table.Cell>
+            <Table.Cell>{`${order.triggerPrice.eq(new BN(0)) ? "-" : `$${formatBigNum(order.triggerPrice, 6)}`} / ${order.price.eq(new BN(0)) ? "-" : `$${formatBigNum(order.price, 6)}`}`}</Table.Cell>
           </Table.Row>
-        )
+        );
       })}
     </Table.Body>
   </Table.Root>

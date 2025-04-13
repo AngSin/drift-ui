@@ -15,7 +15,7 @@ const eslintConfig = [
     rules: {
       "react-hooks/exhaustive-deps": "off",
     },
-  }
+  },
 ];
 
 export default eslintConfig;
