@@ -38,7 +38,6 @@ const DepositForm = () => {
       return;
     }
 
-    let isCancelled = false;
     const connection = driftClient.connection;
     const authority = selectedUser.account.authority;
     const mint = spotMarketAccount.mint;
@@ -49,40 +48,28 @@ const DepositForm = () => {
 
         if (mint.equals(WRAPPED_SOL_MINT)) {
           balanceLamports = await connection.getBalance(authority);
-          if (!isCancelled) {
-            setWalletBalanceBn(new BN(balanceLamports));
-          }
+          setWalletBalanceBn(new BN(balanceLamports));
         } else {
           const ata = getAssociatedTokenAddressSync(mint, authority);
           try {
             const tokenAccountInfo = await connection.getTokenAccountBalance(ata);
-            if (!isCancelled) {
-              if (tokenAccountInfo?.value?.amount) {
-                setWalletBalanceBn(new BN(tokenAccountInfo.value.amount));
-              } else {
-                setWalletBalanceBn(ZERO);
-              }
+            if (tokenAccountInfo?.value?.amount) {
+              setWalletBalanceBn(new BN(tokenAccountInfo.value.amount));
+            } else {
+              setWalletBalanceBn(ZERO);
             }
           } catch (error) {
             console.log(`ATA ${ata.toBase58()} for mint ${mint.toBase58()} not found or error fetching balance:`, error);
-            if (!isCancelled) {
-              setWalletBalanceBn(ZERO);
-            }
+            setWalletBalanceBn(ZERO);
           }
         }
       } catch (error) {
         console.error("Failed to fetch wallet balance:", error);
-        if (!isCancelled) {
-          setWalletBalanceBn(undefined);
-        }
+        setWalletBalanceBn(undefined);
       }
     };
 
     fetchBalance();
-
-    return () => {
-      isCancelled = true;
-    };
 
   }, [driftClient, selectedUser, spotMarketAccount]);
 

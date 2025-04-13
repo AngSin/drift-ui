@@ -11,7 +11,7 @@ type PositionsPanelProps = {
 };
 
 const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
-  const positions = selectedUser.driftUser.getActivePerpPositions();
+  const positions = selectedUser.driftUser.getActivePerpPositions().filter(position => position.baseAssetAmount.toString() !== '0');
   const orders = selectedUser.driftUser.getOpenOrders();
 
   return (
@@ -19,10 +19,10 @@ const PositionsPanel = ({ selectedUser, driftClient }: PositionsPanelProps) => {
       <Tabs.Root defaultValue="positions">
         <Tabs.List>
           <Tabs.Trigger value="positions">
-            Positions
+            Positions ({positions.length})
           </Tabs.Trigger>
           <Tabs.Trigger value="orders">
-            Orders
+            Orders ({orders.length})
           </Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content value="positions">

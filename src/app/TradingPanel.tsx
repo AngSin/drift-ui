@@ -1,32 +1,11 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import {
-  Box,
-  Button,
-  Input,
-  Stack,
-  Text,
-  Tabs,
-} from '@chakra-ui/react';
-import useDriftStore from '@/store/driftStore';
-import {
-  BASE_PRECISION,
-  BN,
-  OrderType,
-  PerpMarkets,
-  PRICE_PRECISION,
-} from '@drift-labs/sdk-browser';
+import React from 'react';
+import {Box, Stack, Tabs,} from '@chakra-ui/react';
+import {OrderType,} from '@drift-labs/sdk-browser';
 import TradingTabs from "@/app/TradingTabs";
 
 const TradingPanel = () => {
-  const { driftClient } = useDriftStore();
-
-  const perpMarkets = useMemo(() => {
-    if (!driftClient) return [];
-    return PerpMarkets[driftClient.env];
-  }, [driftClient]);
-
   return (
     <Box borderWidth={1} borderRadius="lg" p={4} className="h-full bg-gray-950" margin="2">
       <Stack gap={4}>
