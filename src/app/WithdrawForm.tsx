@@ -20,20 +20,6 @@ const WithdrawForm = () => {
     useState<SpotMarketAccount>();
   const { driftClient, selectedUser, lastUpdatedAt } = useDriftStore();
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.currentTarget.value;
-    if (!/^\d*\.?\d*$/.test(value)) {
-      return;
-    }
-    if (value.length > 1 && value.startsWith("0") && !value.startsWith("0.")) {
-      value = value.substring(1);
-    }
-    if (value === "" || value === ".") {
-      value = "0";
-    }
-    setAmountStr(value);
-  };
-
   const availableBalanceBn = useMemo(() => {
     if (!selectedUser?.driftUser || spotMarketAccount === undefined) {
       return undefined;
@@ -121,10 +107,10 @@ const WithdrawForm = () => {
             marketAccounts={driftClient.getSpotMarketAccounts()}
           />
           <Input
-            type="text"
+            type="number"
             inputMode="decimal"
             value={amountStr}
-            onChange={handleAmountChange}
+            onChange={(e) => setAmountStr(e.target.value.trim())}
             placeholder="0.00"
             className="text-right flex-1"
             min={0}
