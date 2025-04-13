@@ -31,7 +31,7 @@ const AccountsDrawer = () => {
   return (
     <Drawer.Root>
       <Drawer.Trigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="subtle" size="lg" margin="1" padding={6}>
           {Buffer.from(selectedUser.account.name).toString()}
         </Button>
       </Drawer.Trigger>
