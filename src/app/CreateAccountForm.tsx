@@ -1,15 +1,14 @@
 "use client";
 
 import { Box, Button, Dialog, Input, Text } from "@chakra-ui/react";
-import UserAccountSelect from "@/app/UserAccountSelect";
 import AssetSelect from "@/app/AssetSelect";
 import {
+  BN,
   SpotMarketAccount,
   WRAPPED_SOL_MINT,
   ZERO,
-  BN,
 } from "@drift-labs/sdk-browser";
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
 import { decimalStrToBN, formatBigNum } from "@/utils/strings";
