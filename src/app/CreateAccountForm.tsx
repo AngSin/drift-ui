@@ -14,42 +14,26 @@ import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import useDriftStore from "@/store/driftStore";
 import { decimalStrToBN, formatBigNum } from "@/utils/strings";
 import { toast } from "react-toastify";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
-const DepositForm = () => {
+const CreateAccountForm = () => {
+  const [name, setName] = useState("");
   const [amountStr, setAmountStr] = useState<string>("0");
   const [spotMarketAccount, setSpotMarketAccount] =
     useState<SpotMarketAccount>();
-  const { driftClient, selectedUser } = useDriftStore();
+  const { driftClient, users, initDriftClient } = useDriftStore();
+  const wallet = useAnchorWallet();
   const [walletBalanceBn, setWalletBalanceBn] = useState<BN | undefined>(
     undefined,
   );
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.currentTarget.value;
-    if (!/^\d*\.?\d*$/.test(value)) {
-      return;
-    }
-    if (value.length > 1 && value.startsWith("0") && !value.startsWith("0.")) {
-      value = value.substring(1);
-    }
-    if (value === "" || value === ".") {
-      value = "0";
-    }
-    setAmountStr(value);
-  };
-
   useEffect(() => {
-    if (
-      !driftClient?.connection ||
-      !selectedUser?.account.authority ||
-      !spotMarketAccount
-    ) {
+    if (!driftClient?.connection || !spotMarketAccount) {
       setWalletBalanceBn(undefined);
       return;
     }
 
     const connection = driftClient.connection;
-    const authority = selectedUser.account.authority;
     const mint = spotMarketAccount.mint;
 
     const fetchBalance = async () => {
@@ -57,10 +41,13 @@ const DepositForm = () => {
         let balanceLamports: number | string | BN;
 
         if (mint.equals(WRAPPED_SOL_MINT)) {
-          balanceLamports = await connection.getBalance(authority);
+          balanceLamports = await connection.getBalance(driftClient.authority);
           setWalletBalanceBn(new BN(balanceLamports));
         } else {
-          const ata = getAssociatedTokenAddressSync(mint, authority);
+          const ata = getAssociatedTokenAddressSync(
+            mint,
+            driftClient.authority,
+          );
           try {
             const tokenAccountInfo =
               await connection.getTokenAccountBalance(ata);
@@ -84,14 +71,14 @@ const DepositForm = () => {
     };
 
     fetchBalance();
-  }, [driftClient, selectedUser, spotMarketAccount]);
+  }, [driftClient, spotMarketAccount]);
 
   const formattedWalletBalance = useMemo(() => {
     return formatBigNum(walletBalanceBn, spotMarketAccount?.decimals ?? 0);
   }, [walletBalanceBn, spotMarketAccount]);
 
   const deposit = async () => {
-    if (!driftClient || !selectedUser || !spotMarketAccount) {
+    if (!driftClient || !spotMarketAccount) {
       toast.error("Missing Information");
       return;
     }
@@ -117,18 +104,22 @@ const DepositForm = () => {
       }
 
       const sourceTokenAccount = isSol
-        ? selectedUser.account.authority
-        : getAssociatedTokenAddressSync(mint, selectedUser.account.authority);
+        ? driftClient.authority
+        : getAssociatedTokenAddressSync(mint, driftClient.authority);
 
-      await driftClient.deposit(
+      await driftClient.initializeUserAccountAndDepositCollateral(
         transferAmount,
-        spotMarketAccount.marketIndex,
         sourceTokenAccount,
-        selectedUser.account.subAccountId,
+        spotMarketAccount.marketIndex,
+        users.length,
+        name,
       );
 
       toast.success("Deposit Submitted");
       setAmountStr("0");
+      if (wallet) {
+        initDriftClient(wallet);
+      }
     } catch (error) {
       console.error("Deposit failed:", error);
       toast.error("Deposit Failed");
@@ -143,8 +134,10 @@ const DepositForm = () => {
     <>
       <Dialog.Body>
         <p>Deposited assets automatically earn yield through lending.</p>
-        <br />
-        <UserAccountSelect label="Deposit to:" />
+        <Box mt={5} mb={5}>
+          <Box>Name:</Box>
+          <Input value={name} onChange={(e) => setName(e.target.value)} />
+        </Box>
         <br />
         <div>Transfer type and Amount</div>
         <div className="flex items-center space-x-2">
@@ -157,14 +150,14 @@ const DepositForm = () => {
             type="number"
             inputMode="decimal"
             value={amountStr}
-            onChange={handleAmountChange}
+            onChange={(e) => setAmountStr(e.target.value.trim())}
             placeholder="0.00"
             className="text-right flex-1"
             min={0}
           />
         </div>
         <Box textAlign="right" mt={1} mr={1} height="20px">
-          {spotMarketAccount && selectedUser && (
+          {spotMarketAccount && (
             <Text fontSize="xs" color="gray.500">
               Wallet Balance: {formattedWalletBalance}{" "}
               {Buffer.from(spotMarketAccount.name).toString()}
@@ -179,10 +172,7 @@ const DepositForm = () => {
         <Button
           onClick={deposit}
           disabled={
-            !driftClient ||
-            !selectedUser ||
-            !spotMarketAccount ||
-            parseFloat(amountStr) <= 0
+            !driftClient || !spotMarketAccount || parseFloat(amountStr) <= 0
           }
         >
           Deposit
@@ -192,4 +182,4 @@ const DepositForm = () => {
   );
 };
 
-export default DepositForm;
+export default CreateAccountForm;

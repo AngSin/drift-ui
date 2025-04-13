@@ -42,11 +42,11 @@ const useDriftStore = create<DriftState>((set, get) => {
     selectedUser: undefined,
     users: [],
     initialized: false,
-    lastUpdatedAt: undefined, // Initialize the timestamp
+    lastUpdatedAt: undefined,
 
     initDriftClient: async (wallet) => {
       console.log("initializing drift client");
-      get().resetDriftClient(); // Ensure clean slate
+      get().resetDriftClient();
 
       const sdkConfig = initialize({ env: WalletAdapterNetwork.Mainnet });
 

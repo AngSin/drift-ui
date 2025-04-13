@@ -14,10 +14,11 @@ import { useEffect, useState } from "react";
 import { connection } from "@/utils/constants";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import TransferDialog from "@/app/TransferDialog";
+import CreateDialog from "@/app/CreateDialog";
 
 const AccountsDrawer = () => {
   const [walletBalance, setWalletBalance] = useState<string>("0.0");
-  const { selectedUser, users, selectUser } = useDriftStore();
+  const { driftClient, selectedUser, users, selectUser } = useDriftStore();
   const fetchBalance = async () => {
     if (selectedUser) {
       const lamports = await connection.getBalance(
@@ -32,7 +33,7 @@ const AccountsDrawer = () => {
     fetchBalance();
   }, [selectedUser]);
 
-  if (!selectedUser) {
+  if (!driftClient) {
     return null;
   }
 
@@ -40,7 +41,9 @@ const AccountsDrawer = () => {
     <Drawer.Root>
       <Drawer.Trigger asChild>
         <Button variant="subtle" size="lg" margin="1" padding={6}>
-          {Buffer.from(selectedUser.account.name).toString()}
+          {selectedUser
+            ? Buffer.from(selectedUser.account.name).toString()
+            : "Create/Deposit Subaccount"}
         </Button>
       </Drawer.Trigger>
       <Portal>
@@ -50,24 +53,30 @@ const AccountsDrawer = () => {
             <br />
             <Drawer.Header>
               <Drawer.Title>
-                {Buffer.from(selectedUser.account.name).toString()}
+                {selectedUser
+                  ? Buffer.from(selectedUser.account.name).toString()
+                  : "Create Sub-Accounts"}
               </Drawer.Title>
               <Drawer.Description>
                 {shortenAddress(
-                  selectedUser.driftUser.getUserAccountPublicKey().toString(),
+                  selectedUser?.driftUser
+                    .getUserAccountPublicKey()
+                    .toString() || "",
                 )}
               </Drawer.Description>
             </Drawer.Header>
             <Drawer.Body>
               <div className="flex justify-between">
                 <div>
-                  <div>
-                    $
-                    {convertToNumber(
-                      selectedUser.driftUser.getTotalAssetValue(),
-                      QUOTE_PRECISION,
-                    ).toFixed(2)}
-                  </div>
+                  {selectedUser && (
+                    <div>
+                      $
+                      {convertToNumber(
+                        selectedUser.driftUser.getTotalAssetValue(),
+                        QUOTE_PRECISION,
+                      ).toFixed(2)}
+                    </div>
+                  )}
                   <div>Subacct. Value</div>
                 </div>
                 <div>
@@ -75,7 +84,7 @@ const AccountsDrawer = () => {
                   <div>Wallet Balance</div>
                 </div>
               </div>
-              <TransferDialog />
+              {users?.length > 0 && <TransferDialog />}
               <Stack gap="4" direction="column" wrap="wrap" marginTop={2}>
                 {users.map((user) => (
                   <Card.Root
@@ -106,6 +115,7 @@ const AccountsDrawer = () => {
                     </Card.Body>
                   </Card.Root>
                 ))}
+                <CreateDialog />
               </Stack>
             </Drawer.Body>
             <Drawer.CloseTrigger asChild>
