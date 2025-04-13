@@ -16,7 +16,7 @@ export default function Home() {
           )}
         </div>
       </Box>
-      <div className="h-screen min-w-[20%]">
+      <div className="h-screen">
         <TradingPanel />
       </div>
     </div>

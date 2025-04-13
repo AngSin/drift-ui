@@ -181,6 +181,9 @@ const DepositForm = () => {
     }
   };
 
+  if (!driftClient) {
+    return null;
+  }
 
   return (
     <>
@@ -191,9 +194,10 @@ const DepositForm = () => {
         <br />
         <div>Transfer type and Amount</div>
         <div className="flex items-center space-x-2">
-          <AssetSelect
-            spotMarketAccount={spotMarketAccount}
-            setSpotMarketAccount={setSpotMarketAccount as (account: SpotMarketAccount | undefined) => void}
+          <AssetSelect<SpotMarketAccount>
+            marketAccount={spotMarketAccount}
+            setMarketAccount={setSpotMarketAccount}
+            marketAccounts={driftClient.getSpotMarketAccounts()}
           />
           <Input
             type="text"

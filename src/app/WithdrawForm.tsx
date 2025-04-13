@@ -138,6 +138,9 @@ const WithdrawForm = () => {
     }
   };
 
+  if (!driftClient) {
+    return null;
+  }
 
   return (
     <>
@@ -148,9 +151,10 @@ const WithdrawForm = () => {
         <br />
         <div>Withdrawal Amount</div>
         <div className="flex items-center space-x-2">
-          <AssetSelect
-            spotMarketAccount={spotMarketAccount}
-            setSpotMarketAccount={setSpotMarketAccount}
+          <AssetSelect<SpotMarketAccount>
+            marketAccount={spotMarketAccount}
+            setMarketAccount={setSpotMarketAccount}
+            marketAccounts={driftClient.getSpotMarketAccounts()}
           />
           <Input
             type="text"

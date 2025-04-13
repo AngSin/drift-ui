@@ -1,30 +1,23 @@
 "use client"
 
-import { Select, createListCollection } from "@chakra-ui/react"
-import useDriftStore from "@/store/driftStore";
-import {SpotMarketAccount} from "@drift-labs/sdk-browser";
-import {useEffect, useState} from "react";
+import {createListCollection, Select} from "@chakra-ui/react"
+import {PerpMarketAccount, SpotMarketAccount} from "@drift-labs/sdk-browser";
 
-type DepositAssetSelectProps = {
-  spotMarketAccount?: SpotMarketAccount;
-  setSpotMarketAccount: (account: SpotMarketAccount) => void;
+type MarketAccount = SpotMarketAccount | PerpMarketAccount;
+
+type AssetSelectProps<T extends MarketAccount> = {
+  marketAccount?: T;
+  setMarketAccount: (account?: T) => void;
+  marketAccounts: T[];
 };
 
-const AssetSelect = ({
-  spotMarketAccount,
-  setSpotMarketAccount
-}: DepositAssetSelectProps) => {
-  const [assets, setAssets] = useState<SpotMarketAccount[]>([]);
-  const { driftClient } = useDriftStore();
-
-  useEffect(() => {
-    if (driftClient) {
-      setAssets(driftClient.getSpotMarketAccounts());
-    }
-  }, [driftClient]);
-
+const AssetSelect = <T extends MarketAccount>({
+  marketAccount,
+  setMarketAccount,
+  marketAccounts
+}: AssetSelectProps<T>) => {
   const assetCollection = createListCollection({
-    items: assets.map(asset => ({
+    items: marketAccounts.map(asset => ({
       ...asset,
       key: asset.marketIndex,
       value: Buffer.from(asset.name).toString()
@@ -52,10 +45,10 @@ const AssetSelect = ({
             <Select.Item
               item={asset}
               key={asset.key}
-              onClick={() => setSpotMarketAccount(asset)}
+              onClick={() => setMarketAccount(asset)}
             >
               {asset.value}
-              {spotMarketAccount?.marketIndex === asset.key && <Select.ItemIndicator />}
+              {marketAccount?.marketIndex === asset.key && <Select.ItemIndicator />}
             </Select.Item>
           ))}
         </Select.Content>
