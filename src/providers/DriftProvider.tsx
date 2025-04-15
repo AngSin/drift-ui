@@ -2,18 +2,15 @@
 
 import useDriftStore from "@/store/driftStore";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { PropsWithChildren, useEffect, useRef } from "react";
+import { PropsWithChildren, useEffect } from "react";
 
 const DriftProvider = (props: PropsWithChildren) => {
   const wallet = useAnchorWallet();
 
   const { initDriftClient, resetDriftClient } = useDriftStore();
 
-  const alreadyInitialized = useRef(false);
-
   useEffect(() => {
-    if (!alreadyInitialized.current && wallet) {
-      alreadyInitialized.current = true;
+    if (wallet) {
       initDriftClient(wallet);
     }
 
